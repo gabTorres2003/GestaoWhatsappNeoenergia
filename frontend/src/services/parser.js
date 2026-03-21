@@ -3,14 +3,8 @@
  * Regex para INC: INC\s?\d+
  */
 export const parseWhatsAppText = (text) => {
-  const lines = text.split('\n').filter(line => line.trim() !== '');
-  const chamados = [];
-
   // Padrão para identificar um novo chamado (geralmente começa com INC ou data)
   const incRegex = /INC\s?\d+/gi;
-  
-  let currentText = text;
-  let match;
   
   // Encontrar todos os INCs no texto
   const matches = [...text.matchAll(incRegex)];

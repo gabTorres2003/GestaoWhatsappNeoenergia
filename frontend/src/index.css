@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+@theme {
+  --color-neo-verde: #008d36;
+  --color-indra-azul: #004f71;
+  --color-minsait-bordo: #700036;
+}
+
 :root {
   --neo-verde: #008d36;
   --indra-azul: #004f71;
