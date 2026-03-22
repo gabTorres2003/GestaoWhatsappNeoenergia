@@ -4,18 +4,58 @@ import ChamadosTable from '../components/ChamadosTable'
 import ScriptGenerator from '../components/ScriptGenerator'
 import MassiveAlert from '../components/MassiveAlert'
 import { detectMassiveIncidents } from '../services/incidentDetector'
+import { supabase } from '../services/supabaseClient'
 
 const Home = () => {
-  const [chamados, setChamados] = useState(() => {
-    const saved = localStorage.getItem('chamados_neoenergia')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [chamados, setChamados] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Carregar chamados do Supabase
+  const fetchChamados = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chamados')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setChamados(data || [])
+    } catch (error) {
+      console.error('Erro ao carregar chamados:', error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    localStorage.setItem('chamados_neoenergia', JSON.stringify(chamados))
-  }, [chamados])
+    fetchChamados()
 
-  const handleImported = (newChamados) => {
+    // Configurar Realtime
+    const subscription = supabase
+      .channel('chamados_changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'chamados' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setChamados((prev) => [payload.new, ...prev])
+          } else if (payload.eventType === 'UPDATE') {
+            setChamados((prev) =>
+              prev.map((c) => (c.id === payload.new.id ? payload.new : c)),
+            )
+          } else if (payload.eventType === 'DELETE') {
+            setChamados((prev) => prev.filter((c) => c.id !== payload.old.id))
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(subscription)
+    }
+  }, [])
+
+  const handleImported = async (newChamados) => {
     // Evita duplicados por INC
     const existingIncs = new Set(chamados.map((c) => c.inc))
     const filteredNew = newChamados.filter((c) => !existingIncs.has(c.inc))
@@ -25,22 +65,59 @@ const Home = () => {
       return
     }
 
-    setChamados((prev) => [...filteredNew, ...prev])
+    try {
+      // Remover campos locais que o Supabase gera (id, created_at, updated_at se houver)
+      const dataToInsert = filteredNew.map((item) => {
+        const { id, ...rest } = item
+        console.log('Ignorando ID local:', id) // Usando a variável para evitar erro de lint
+        return rest
+      })
+
+      const { error } = await supabase.from('chamados').insert(dataToInsert)
+
+      if (error) throw error
+    } catch (error) {
+      alert('Erro ao importar chamados para o banco de dados: ' + error.message)
+    }
   }
 
-  const updateStatus = (id, status) => {
-    setChamados((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? { ...c, status, updated_at: new Date().toISOString() }
-          : c,
-      ),
-    )
+  const updateStatus = async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('chamados')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error.message)
+    }
   }
 
-  const removeChamado = (id) => {
+  const removeChamado = async (id) => {
     if (window.confirm('Deseja remover este chamado?')) {
-      setChamados((prev) => prev.filter((c) => c.id !== id))
+      try {
+        const { error } = await supabase.from('chamados').delete().eq('id', id)
+
+        if (error) throw error
+      } catch (error) {
+        console.error('Erro ao remover chamado:', error.message)
+      }
+    }
+  }
+
+  const removeAllChamados = async () => {
+    if (confirm('Limpar todos os chamados do banco de dados?')) {
+      try {
+        const { error } = await supabase
+          .from('chamados')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000') // Truque para deletar tudo no Supabase se não houver where clause
+
+        if (error) throw error
+      } catch (error) {
+        console.error('Erro ao limpar chamados:', error.message)
+      }
     }
   }
 
@@ -121,13 +198,16 @@ const Home = () => {
         {/* Coluna Direita: Tabela de Operação */}
         <div className="lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
               📋 Fila de Atendimento
+              {loading && (
+                <span className="text-[10px] text-slate-500 animate-pulse font-normal">
+                  Sincronizando...
+                </span>
+              )}
             </h2>
             <button
-              onClick={() => {
-                if (confirm('Limpar todos os chamados?')) setChamados([])
-              }}
+              onClick={removeAllChamados}
               className="text-xs text-slate-500 hover:text-rose-400 font-bold uppercase tracking-widest transition-colors"
             >
               Limpar Tudo
