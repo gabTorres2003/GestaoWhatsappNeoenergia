@@ -41,8 +41,9 @@ const ScriptGenerator = ({ chamados }) => {
 
       case 'ITNOW_COLABORADOR':
         const incTextItnow = isPlural ? `identificadores n.º ${incsListados}` : `identificador n.º ${selectedIncs[0]}`;
-        const saudacaoColab = colaborador ? `Olá, ${colaborador}\n\n` : `Olá,\n\n`;
-        return `${saudacaoColab}É um prazer poder te ajudar, por isso documentamos todas as informações fornecidas. Destacamos a prioridade e solicitamos um retorno da equipe responsável, para fornecer uma previsão de atendimento para a solução do seu caso.\n\nPara acompanhar o andamento com o status atualizado, basta localizar o ${incTextItnow} no ITNow (https://iberdrola.service-now.com/itnow), diretamente pela aba CONSULTAS. Além disso, caso seja necessário, você pode adicionar mais informações relevantes e novas evidências sobre o erro.\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contato pelos Canais de Atendimento listados abaixo:\n\nChat via ITNOW: https://iberdrola.service-now.com/itnow\nTelefone Externo: 7133706000\n\nCordialmente,\nService Desk Neoenergia.`;
+        const saudacaoColab = colaborador ? `Olá, ${colaborador}` : `Olá,`;
+        
+        return `${saudacaoColab}\n\nÉ um prazer poder te ajudar, por isso documentamos todas as informações fornecidas. Destacamos a prioridade e solicitamos um retorno da equipe responsável, para fornecer uma previsão de atendimento para a solução do seu caso.\n\nPara acompanhar o andamento com o status atualizado, basta localizar o ${incTextItnow} no ITNow (https://iberdrola.service-now.com/itnow), diretamente pela aba CONSULTAS. Além disso, caso seja necessário, você pode adicionar mais informações relevantes e novas evidências sobre o erro.\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contato pelos Canais de Atendimento listados abaixo:\n\nChat via ITNOW: https://iberdrola.service-now.com/itnow\nTelefone Externo: 7133706000\n\nCordialmente,\nService Desk Neoenergia.`;
 
       case 'WPP_CURTO':
         return `${getSaudacao()}, ${solicitante || '[Nome do Solicitante]'}!\nSolicitada a prioridade e previsão de atendimento! (${incsListados})\nVoltamos em 15 minutos com mais informações!`;
@@ -66,7 +67,7 @@ const ScriptGenerator = ({ chamados }) => {
     try {
       await navigator.clipboard.writeText(script);
       setCopiedType(tipo);
-      setTimeout(() => setCopiedType(null), 2000); // Remove o "Copiado!" após 2s
+      setTimeout(() => setCopiedType(null), 2000); 
     } catch (err) {
       console.error('Falha ao copiar:', err);
     }
@@ -136,6 +137,10 @@ const ScriptGenerator = ({ chamados }) => {
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Equipe Designada</label>
           <input type="text" value={equipe} onChange={(e) => setEquipe(e.target.value)} placeholder="Ex: N3 - Telecom" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
+        </div>
+        <div>
+          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Colaborador</label>
+          <input type="text" value={colaborador} onChange={(e) => setColaborador(e.target.value)} placeholder="Ex: João Silva" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
         </div>
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Solicitante</label>
