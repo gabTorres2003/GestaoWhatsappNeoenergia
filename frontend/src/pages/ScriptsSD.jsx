@@ -15,10 +15,6 @@ export default function ScriptsSD() {
 
     const [copiado, setCopiado] = useState({ email: false, chamado: false, nota: false });
 
-    const toggleCampos = (novaAcao) => {
-        setAcao(novaAcao);
-    };
-
     const gerarScripts = () => {
         const dados = {
             acao,
@@ -63,273 +59,349 @@ export default function ScriptsSD() {
     const mostrarSenha = acao !== 'unlock' && acao !== 'disabled' && acao !== 'not_found';
 
     return (
-        <div className="sd-container">
-            {/* ESTILOS EMBUTIDOS DIRETAMENTE NO JSX */}
+        <div className="neo-container">
             <style>{`
-                .sd-container {
-                    padding: 20px;
-                    color: #e2e8f0; /* Cor de texto clara para fundo escuro */
+                /* Variáveis de cores baseadas no layout Access Control */
+                :root {
+                    --bg-page: #0b1120;
+                    --bg-card: #151e2d;
+                    --bg-input: #0b1120;
+                    --border-color: #2b3648;
+                    --border-focus: #4b5e7a;
+                    --text-main: #f8fafc;
+                    --text-muted: #8b9bb4;
+                    --brand-orange: #f95700;
+                    --brand-orange-hover: #e04e00;
+                    --btn-gray: #334155;
+                    --btn-gray-hover: #475569;
+                    --success-green: #10b981;
+                }
+
+                .neo-container {
+                    padding: 30px;
+                    color: var(--text-main);
                     font-family: system-ui, -apple-system, sans-serif;
                     box-sizing: border-box;
+                    max-width: 1400px;
+                    margin: 0 auto;
                 }
-                .sd-header {
+
+                /* Header */
+                .neo-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 1px solid #1e293b;
-                    padding-bottom: 15px;
-                    margin-bottom: 25px;
+                    border-bottom: 1px solid var(--border-color);
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
                 }
-                .sd-header h2 {
+                .neo-header h2 {
                     margin: 0;
                     font-size: 1.5rem;
                     font-weight: 600;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .nav-buttons {
+                    display: flex;
+                    gap: 12px;
                 }
                 .btn-nav {
                     text-decoration: none;
                     padding: 8px 16px;
-                    border-radius: 4px;
-                    font-size: 0.9em;
-                    transition: all 0.2s;
-                    color: #e2e8f0;
+                    border-radius: 6px;
+                    font-size: 0.85em;
+                    font-weight: 500;
+                    transition: background 0.2s;
+                    color: var(--text-main);
+                    border: 1px solid var(--border-color);
+                    background-color: transparent;
                 }
-                .btn-nav.mass {
-                    background: #475569;
-                }
-                .btn-nav.mass:hover { background: #334155; }
-                .btn-nav.access:hover { color: #60a5fa; }
-                
-                .type-selector {
-                    margin-bottom: 25px;
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                }
-                .radio-group {
-                    display: flex;
-                    gap: 20px;
-                }
-                .radio-option {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    cursor: pointer;
-                    font-size: 0.95em;
+                .btn-nav:hover {
+                    background-color: var(--bg-card);
                 }
 
-                .input-grid {
+                /* Cards */
+                .neo-card {
+                    background-color: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: 10px;
+                    padding: 25px;
+                    margin-bottom: 25px;
+                }
+
+                /* Formulário */
+                .form-section {
+                    margin-bottom: 25px;
+                }
+                .neo-label {
+                    display: block;
+                    text-transform: uppercase;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    color: var(--text-muted);
+                    margin-bottom: 10px;
+                    letter-spacing: 0.5px;
+                }
+
+                /* Radio Buttons estilo Pílula */
+                .radio-pill-group {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                }
+                .radio-pill {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 10px 18px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 30px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    transition: all 0.2s;
+                    background-color: transparent;
+                }
+                .radio-pill:hover {
+                    border-color: var(--border-focus);
+                }
+                .radio-pill.active {
+                    border-color: var(--text-main);
+                }
+                .radio-pill input {
+                    display: none;
+                }
+                .radio-circle {
+                    width: 14px;
+                    height: 14px;
+                    border-radius: 50%;
+                    border: 1.5px solid var(--text-muted);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .radio-pill.active .radio-circle {
+                    border-color: var(--text-main);
+                }
+                .radio-pill.active .radio-circle::after {
+                    content: "";
+                    width: 6px;
+                    height: 6px;
+                    background-color: var(--text-main);
+                    border-radius: 50%;
+                }
+
+                /* Inputs */
+                .neo-grid {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 20px;
-                    margin-bottom: 25px;
                 }
-                .field label {
-                    display: block;
-                    margin-bottom: 8px;
-                    font-size: 0.9em;
-                    color: #cbd5e1;
-                }
-                .field input, .field select {
+                .neo-input {
                     width: 100%;
-                    padding: 10px 12px;
-                    background-color: #0f172a;
-                    border: 1px solid #334155;
-                    border-radius: 4px;
-                    color: #f8fafc;
+                    background-color: var(--bg-input);
+                    border: 1px solid var(--border-color);
+                    border-radius: 6px;
+                    padding: 12px 15px;
+                    color: var(--text-main);
                     font-size: 0.95em;
                     outline: none;
                     transition: border-color 0.2s;
+                    box-sizing: border-box;
                 }
-                .field input:focus, .field select:focus {
-                    border-color: #3b82f6;
+                .neo-input:focus {
+                    border-color: var(--border-focus);
                 }
-                .field.span-2 {
+                .span-2 {
                     grid-column: span 2;
                 }
 
-                .action-buttons {
-                    display: flex;
-                    gap: 12px;
-                    margin-bottom: 30px;
+                /* Botões de Ação */
+                .action-row {
+                    display: grid;
+                    grid-template-columns: 1fr 2fr;
+                    gap: 20px;
+                    margin-top: 30px;
                 }
-                .btn {
-                    padding: 10px 20px;
+                .btn-neo {
+                    padding: 14px 24px;
                     border: none;
-                    border-radius: 4px;
-                    font-weight: 500;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    font-size: 1em;
                     cursor: pointer;
                     transition: background-color 0.2s;
+                    text-align: center;
                 }
-                .btn-clear {
-                    background-color: #f1f5f9;
-                    color: #0f172a;
+                .btn-clear-neo {
+                    background-color: var(--btn-gray);
+                    color: var(--text-main);
                 }
-                .btn-clear:hover { background-color: #e2e8f0; }
-                .btn-generate {
-                    background-color: #2563eb;
+                .btn-clear-neo:hover { background-color: var(--btn-gray-hover); }
+                
+                .btn-generate-neo {
+                    background-color: var(--brand-orange);
                     color: white;
                 }
-                .btn-generate:hover { background-color: #1d4ed8; }
+                .btn-generate-neo:hover { background-color: var(--brand-orange-hover); }
 
+                /* Outputs */
                 .output-grid {
                     display: grid;
                     grid-template-columns: 1fr 1fr 1fr;
                     gap: 20px;
                 }
-                .output-box {
-                    display: flex;
-                    flex-direction: column;
-                }
                 .output-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    margin-bottom: 10px;
+                    margin-bottom: 12px;
                 }
-                .output-header h3 {
-                    margin: 0;
-                    font-size: 1rem;
-                    color: #f8fafc;
+                .output-title {
+                    font-size: 0.9em;
+                    font-weight: 600;
+                    color: var(--text-main);
                 }
-                .btn-copy {
-                    padding: 6px 12px;
+                .btn-copy-neo {
+                    background-color: var(--btn-gray);
+                    color: var(--text-main);
                     border: none;
+                    padding: 6px 14px;
                     border-radius: 4px;
+                    font-size: 0.8em;
+                    font-weight: 500;
                     cursor: pointer;
-                    font-size: 0.85em;
-                    color: white;
                     transition: background-color 0.2s;
                 }
-                .output-box textarea {
+                .btn-copy-neo:hover { background-color: var(--btn-gray-hover); }
+                .btn-copy-neo.copied { background-color: var(--success-green); }
+
+                .neo-textarea {
                     width: 100%;
-                    min-height: 250px;
-                    padding: 12px;
-                    background-color: #0f172a;
-                    border: 1px solid #334155;
-                    border-radius: 4px;
-                    color: #f8fafc;
-                    resize: vertical;
+                    min-height: 200px;
+                    background-color: transparent;
+                    border: none;
+                    color: var(--text-muted);
                     font-family: inherit;
+                    font-size: 0.9em;
                     line-height: 1.5;
+                    resize: vertical;
                     outline: none;
-                }
-                .output-box textarea:focus {
-                    border-color: #3b82f6;
                 }
             `}</style>
 
             {/* Cabeçalho */}
-            <div className="sd-header">
+            <div className="neo-header">
                 <h2>Scripts Neoenergia</h2>
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <a href="/processamento-massa" className="btn-nav mass">⚡ Processamento em Massa</a>
-                    <a href="/access-control" className="btn-nav access">Access Control →</a>
+                <div className="nav-buttons">
+                    <a href="/processamento-massa" className="btn-nav">⚡ Processamento em Massa</a>
+                    <a href="/access-control" className="btn-nav">← Voltar ao HUB</a>
                 </div>
             </div>
 
-            {/* Radio Buttons */}
-            <div className="type-selector">
-                <span style={{ fontWeight: '600' }}>Tipo de Solicitação:</span>
-                <div className="radio-group">
-                    <label className="radio-option">
-                        <input type="radio" name="acao" value="reset" checked={acao === 'reset'} onChange={() => toggleCampos('reset')} /> Reset
-                    </label>
-                    <label className="radio-option">
-                        <input type="radio" name="acao" value="unlock" checked={acao === 'unlock'} onChange={() => toggleCampos('unlock')} /> Desbloqueio
-                    </label>
-                    <label className="radio-option">
-                        <input type="radio" name="acao" value="disabled" checked={acao === 'disabled'} onChange={() => toggleCampos('disabled')} /> Desabilitado
-                    </label>
-                    <label className="radio-option">
-                        <input type="radio" name="acao" value="not_found" checked={acao === 'not_found'} onChange={() => toggleCampos('not_found')} /> Não Encontrado
-                    </label>
-                </div>
-            </div>
-
-            {/* Formulário */}
-            <div className="input-grid">
-                <div className="field">
-                    <label>Registro ITNOW:</label>
-                    <input type="text" value={registro} onChange={(e) => setRegistro(e.target.value)} placeholder="Ex: INC123456" />
-                </div>
+            {/* Card Principal de Formulário */}
+            <div className="neo-card">
                 
-                <div className="field">
-                    <label>Sistema:</label>
-                    <select value={sistema} onChange={(e) => setSistema(e.target.value)}>
-                        <option value="GSE (COELBA) - PRD">GSE (COELBA) - PRD</option>
-                        <option value="GSE (COSERN) - PRD">GSE (COSERN) - PRD</option>
-                        <option value="GSE (PERNAMBUCO) - PRD">GSE (PERNAMBUCO) - PRD</option>
-                        <option value="UE WEB (CS) - PRD">UE WEB (CS) - PRD</option>
-                    </select>
-                </div>
-
-                <div className="field">
-                    <label>Nome:</label>
-                    <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo" />
-                </div>
-
-                <div className="field">
-                    <label>Login:</label>
-                    <input type="text" value={matricula} onChange={(e) => setMatricula(e.target.value)} placeholder="E976850" />
-                </div>
-
-                {mostrarSenha && (
-                    <div className="field span-2">
-                        <label>Nova Senha:</label>
-                        <input type="text" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Colar senha inteira no padrão do GSE" />
+                {/* Tipo de Solicitação (Rádios) */}
+                <div className="form-section">
+                    <span className="neo-label">TIPO DE SOLICITAÇÃO:</span>
+                    <div className="radio-pill-group">
+                        <label className={`radio-pill ${acao === 'reset' ? 'active' : ''}`}>
+                            <input type="radio" name="acao" value="reset" checked={acao === 'reset'} onChange={(e) => setAcao(e.target.value)} />
+                            <div className="radio-circle"></div> Nova Senha (Reset)
+                        </label>
+                        <label className={`radio-pill ${acao === 'unlock' ? 'active' : ''}`}>
+                            <input type="radio" name="acao" value="unlock" checked={acao === 'unlock'} onChange={(e) => setAcao(e.target.value)} />
+                            <div className="radio-circle"></div> Desbloqueio
+                        </label>
+                        <label className={`radio-pill ${acao === 'disabled' ? 'active' : ''}`}>
+                            <input type="radio" name="acao" value="disabled" checked={acao === 'disabled'} onChange={(e) => setAcao(e.target.value)} />
+                            <div className="radio-circle"></div> Desabilitado
+                        </label>
+                        <label className={`radio-pill ${acao === 'not_found' ? 'active' : ''}`}>
+                            <input type="radio" name="acao" value="not_found" checked={acao === 'not_found'} onChange={(e) => setAcao(e.target.value)} />
+                            <div className="radio-circle"></div> Não Encontrado
+                        </label>
                     </div>
-                )}
+                </div>
+
+                {/* Inputs de Texto */}
+                <div className="neo-grid">
+                    <div>
+                        <label className="neo-label">REGISTRO ITNOW</label>
+                        <input type="text" className="neo-input" value={registro} onChange={(e) => setRegistro(e.target.value)} placeholder="Ex: INC123456" />
+                    </div>
+                    
+                    <div>
+                        <label className="neo-label">SISTEMA</label>
+                        <select className="neo-input" value={sistema} onChange={(e) => setSistema(e.target.value)}>
+                            <option value="GSE (COELBA) - PRD">GSE (COELBA) - PRD</option>
+                            <option value="GSE (COSERN) - PRD">GSE (COSERN) - PRD</option>
+                            <option value="GSE (PERNAMBUCO) - PRD">GSE (PERNAMBUCO) - PRD</option>
+                            <option value="UE WEB (CS) - PRD">UE WEB (CS) - PRD</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="neo-label">NOME DO COLABORADOR</label>
+                        <input type="text" className="neo-input" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex: Maria Santos" />
+                    </div>
+
+                    <div>
+                        <label className="neo-label">ID DO UTILIZADOR (LOGIN)</label>
+                        <input type="text" className="neo-input" value={matricula} onChange={(e) => setMatricula(e.target.value)} placeholder="Ex: E976850" />
+                    </div>
+
+                    {mostrarSenha && (
+                        <div className="span-2">
+                            <label className="neo-label">NOVA SENHA</label>
+                            <input type="text" className="neo-input" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Colar senha inteira no padrão do GSE..." />
+                        </div>
+                    )}
+                </div>
+
+                {/* Botões de Ação */}
+                <div className="action-row">
+                    <button className="btn-neo btn-clear-neo" onClick={limparCampos}>Limpar Tudo</button>
+                    <button className="btn-neo btn-generate-neo" onClick={gerarScripts}>Gerar Scripts</button>
+                </div>
+
             </div>
 
-            {/* Botões de Ação */}
-            <div className="action-buttons">
-                <button className="btn btn-clear" onClick={limparCampos}>Limpar</button>
-                <button className="btn btn-generate" onClick={gerarScripts}>Gerar Scripts</button>
-            </div>
-
-            {/* Áreas de Texto (Saídas) */}
+            {/* Cards de Output */}
             <div className="output-grid">
-                <div className="output-box">
+                
+                <div className="neo-card" style={{ marginBottom: 0 }}>
                     <div className="output-header">
-                        <h3>E-mail</h3>
-                        <button 
-                            className="btn-copy" 
-                            style={{ backgroundColor: copiado.email ? '#16a34a' : '#2563eb' }}
-                            onClick={() => copiarTexto(outEmail, 'email')}
-                        >
+                        <span className="output-title">Para o E-mail</span>
+                        <button className={`btn-copy-neo ${copiado.email ? 'copied' : ''}`} onClick={() => copiarTexto(outEmail, 'email')}>
                             {copiado.email ? 'Copiado!' : 'Copiar'}
                         </button>
                     </div>
-                    <textarea value={outEmail} readOnly placeholder="O script de e-mail aparecerá aqui..."></textarea>
+                    <textarea className="neo-textarea" value={outEmail} readOnly placeholder="O script de e-mail aparecerá aqui..."></textarea>
                 </div>
 
-                <div className="output-box">
+                <div className="neo-card" style={{ marginBottom: 0 }}>
                     <div className="output-header">
-                        <h3>Chamado</h3>
-                        <button 
-                            className="btn-copy" 
-                            style={{ backgroundColor: copiado.chamado ? '#16a34a' : '#2563eb' }}
-                            onClick={() => copiarTexto(outChamado, 'chamado')}
-                        >
+                        <span className="output-title">Para o Chamado</span>
+                        <button className={`btn-copy-neo ${copiado.chamado ? 'copied' : ''}`} onClick={() => copiarTexto(outChamado, 'chamado')}>
                             {copiado.chamado ? 'Copiado!' : 'Copiar'}
                         </button>
                     </div>
-                    <textarea value={outChamado} readOnly placeholder="O script do chamado aparecerá aqui..."></textarea>
+                    <textarea className="neo-textarea" value={outChamado} readOnly placeholder="O script do chamado aparecerá aqui..."></textarea>
                 </div>
 
-                <div className="output-box">
+                <div className="neo-card" style={{ marginBottom: 0 }}>
                     <div className="output-header">
-                        <h3>Nota (15 min)</h3>
-                        <button 
-                            className="btn-copy" 
-                            style={{ backgroundColor: copiado.nota ? '#16a34a' : '#2563eb' }}
-                            onClick={() => copiarTexto(outNota, 'nota')}
-                        >
+                        <span className="output-title">Nota (15 min)</span>
+                        <button className={`btn-copy-neo ${copiado.nota ? 'copied' : ''}`} onClick={() => copiarTexto(outNota, 'nota')}>
                             {copiado.nota ? 'Copiado!' : 'Copiar'}
                         </button>
                     </div>
-                    <textarea value={outNota} readOnly placeholder="A nota do chamado aparecerá aqui..."></textarea>
+                    <textarea className="neo-textarea" value={outNota} readOnly placeholder="A nota do chamado aparecerá aqui..."></textarea>
                 </div>
+
             </div>
         </div>
     );
