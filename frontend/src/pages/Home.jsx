@@ -1,268 +1,83 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import ImportadorTexto from '../components/ImportadorTexto'
-import ChamadosTable from '../components/ChamadosTable'
-import ScriptGenerator from '../components/ScriptGenerator'
-import MassiveAlert from '../components/MassiveAlert'
-import { detectMassiveIncidents } from '../services/incidentDetector'
-import { supabase } from '../services/supabaseClient'
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const HubCard = ({ title, description, icon, to, colorClass }) => (
+  <Link to={to} className={`bg-slate-800/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-700 hover:border-${colorClass} transition-all duration-300 group hover:-translate-y-1 shadow-lg`}>
+    <div className={`w-14 h-14 rounded-xl mb-4 flex items-center justify-center bg-slate-900 border border-slate-700 group-hover:border-${colorClass} transition-colors`}>
+      {icon}
+    </div>
+    <h3 className={`text-xl font-bold text-white mb-2 group-hover:text-${colorClass} transition-colors`}>
+      {title}
+    </h3>
+    <p className="text-slate-400 text-sm font-medium leading-relaxed">
+      {description}
+    </p>
+  </Link>
+);
 
 const Home = () => {
-  const [chamados, setChamados] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  // Carregar chamados do Supabase
-  const fetchChamados = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('chamados')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setChamados(data || [])
-    } catch (error) {
-      console.error('Erro ao carregar chamados:', error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchChamados()
-
-    // Configurar Realtime
-    const subscription = supabase
-      .channel('chamados_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'chamados' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setChamados((prev) => [payload.new, ...prev])
-          } else if (payload.eventType === 'UPDATE') {
-            setChamados((prev) =>
-              prev.map((c) => (c.id === payload.new.id ? payload.new : c)),
-            )
-          } else if (payload.eventType === 'DELETE') {
-            setChamados((prev) => prev.filter((c) => c.id !== payload.old.id))
-          }
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(subscription)
-    }
-  }, [])
-
-  const handleImported = async (newChamados) => {
-    // Evita duplicados por INC
-    const existingIncs = new Set(chamados.map((c) => c.inc))
-    const filteredNew = newChamados.filter((c) => !existingIncs.has(c.inc))
-
-    if (filteredNew.length === 0 && newChamados.length > 0) {
-      alert('Todos os INCs informados já estão na lista!')
-      return
-    }
-
-    try {
-      // Remover campos locais que o Supabase gera (id, created_at, updated_at se houver)
-      const dataToInsert = filteredNew.map((item) => {
-        const { id, ...rest } = item
-        console.log('Ignorando ID local:', id) // Usando a variável para evitar erro de lint
-        return rest
-      })
-
-      const { error } = await supabase.from('chamados').insert(dataToInsert)
-
-      if (error) throw error
-    } catch (error) {
-      alert('Erro ao importar chamados para o banco de dados: ' + error.message)
-    }
-  }
-
-  const updateStatus = async (id, status) => {
-    try {
-      const { error } = await supabase
-        .from('chamados')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', id)
-
-      if (error) throw error
-    } catch (error) {
-      console.error('Erro ao atualizar status:', error.message)
-    }
-  }
-
-  const removeChamado = async (id) => {
-    if (window.confirm('Deseja remover este chamado?')) {
-      try {
-        const { error } = await supabase.from('chamados').delete().eq('id', id)
-
-        if (error) throw error
-      } catch (error) {
-        console.error('Erro ao remover chamado:', error.message)
-      }
-    }
-  }
-
-  const removeAllChamados = async () => {
-    if (confirm('Limpar todos os chamados do banco de dados?')) {
-      try {
-        const { error } = await supabase
-          .from('chamados')
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000') // Truque para deletar tudo no Supabase se não houver where clause
-
-        if (error) throw error
-      } catch (error) {
-        console.error('Erro ao limpar chamados:', error.message)
-      }
-    }
-  }
-
-  // Estatísticas e Incidentes Massivos recalculados sempre que os chamados mudarem
-  const { stats, massives } = useMemo(() => {
-    const now = new Date()
-
-    const stats = {
-      total: chamados.length,
-      abertos: chamados.filter((c) => c.status === 'ABERTO').length,
-      resolvidos: chamados.filter((c) => c.status === 'RESOLVIDO').length,
-      criticos: chamados.filter((c) => {
-        const diff =
-          new Date(c.created_at).getTime() + 15 * 60000 - now.getTime()
-        return diff < 0 && c.status !== 'RESOLVIDO'
-      }).length,
-    }
-
-    const massives = detectMassiveIncidents(chamados, 3, 30) // 3 ou mais em 30 min
-
-    return { stats, massives }
-  }, [chamados])
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12 space-y-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12">
+      <div className="max-w-6xl mx-auto space-y-12">
         
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight m-0">
-              Gestão de Chamados <span className="text-neo-green">Massivos</span>
-            </h1>
-            <p className="text-slate-400 mt-2 font-medium">
-              <span className="text-neo-blue font-bold">Indra</span> |{' '}
-              <span className="text-neo-orange font-bold">Minsait</span> —
-              Service Desk Neoenergia
-            </p>
+        {/* Header do HUB */}
+        <header className="text-center space-y-4 pt-10">
+          <div className="inline-flex items-center justify-center p-3 bg-neo-green/10 rounded-2xl mb-2">
+            <svg className="w-10 h-10 text-neo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           </div>
-
-          <div className="flex gap-4">
-            <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-700 text-center min-w-[110px] shadow-lg">
-              <span className="block text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                Total
-              </span>
-              <span className="text-2xl font-black text-white">
-                {stats.total}
-              </span>
-            </div>
-            <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-700 text-center min-w-[110px] shadow-lg">
-              <span className="block text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                Abertos
-              </span>
-              <span className="text-2xl font-black text-neo-green">
-                {stats.abertos}
-              </span>
-            </div>
-            <div className="bg-slate-800/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-700 text-center min-w-[110px] shadow-lg">
-              <span className="block text-slate-500 text-[10px] uppercase font-bold tracking-wider">
-                Atrasados
-              </span>
-              <span className="text-2xl font-black text-rose-500">
-                {stats.criticos}
-              </span>
-            </div>
-          </div>
+          <h1 className="text-5xl font-extrabold text-white tracking-tight">
+            Service Desk <span className="text-neo-green">HUB</span>
+          </h1>
+          <p className="text-slate-400 text-lg font-medium max-w-2xl mx-auto">
+            Central de automações e ferramentas para otimização do atendimento da equipe Indra | Minsait na Neoenergia.
+          </p>
         </header>
 
-        {/* Main Grid */}
-        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Coluna Esquerda: Importação e Ferramentas */}
-          <div className="lg:col-span-4 space-y-8">
-            {massives.length > 0 && <MassiveAlert massives={massives} />}
-            <ImportadorTexto onImported={handleImported} />
-            <ScriptGenerator
-              chamados={chamados.filter((c) => c.status !== 'RESOLVIDO')}
-            />
-          </div>
+        {/* Grid de Ferramentas */}
+        <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-8">
+          
+          <HubCard 
+            title="Gestão de WhatsApp"
+            description="Tratamento de chamados massivos via WhatsApp. Importe textos, monitore filas e gere scripts ágeis de retorno."
+            to="/whatsapp"
+            colorClass="neo-green"
+            icon={<svg className="w-7 h-7 text-neo-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>}
+          />
 
-          {/* Coluna Direita: Tabela de Operação */}
-          <div className="lg:col-span-8 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                📋 Fila de Atendimento
-                {loading && (
-                  <span className="text-[10px] text-slate-500 animate-pulse font-normal">
-                    Sincronizando...
-                  </span>
-                )}
-              </h2>
-              <button
-                onClick={removeAllChamados}
-                className="text-xs text-slate-500 hover:text-rose-400 font-bold uppercase tracking-widest transition-colors"
-              >
-                Limpar Tudo
-              </button>
-            </div>
+          <HubCard 
+            title="Scripts: Reset & Senhas"
+            description="Gerador rápido de scripts padronizados para Reset, Desbloqueio e problemas de acesso em sistemas como GSE e UE."
+            to="/scripts-sd"
+            colorClass="neo-blue"
+            icon={<svg className="w-7 h-7 text-neo-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>}
+          />
 
-            {chamados.length > 0 ? (
-              <ChamadosTable
-                chamados={chamados}
-                onUpdateStatus={updateStatus}
-                onRemove={removeChamado}
-              />
-            ) : (
-              <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-3xl p-20 text-center">
-                <div className="bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-700">
-                  <svg
-                    className="w-8 h-8 text-slate-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-slate-400 font-bold">
-                  Nenhum chamado na fila
-                </h3>
-                <p className="text-slate-600 text-sm mt-1">
-                  Cole o texto do WhatsApp ao lado para começar.
-                </p>
-              </div>
-            )}
-          </div>
+          <HubCard 
+            title="Access Control (SAP)"
+            description="Automação para criação de chamados e e-mails de solicitação de novos usuários ou reset de senhas no SAP/GCO."
+            to="/access-control"
+            colorClass="neo-orange"
+            icon={<svg className="w-7 h-7 text-neo-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>}
+          />
+
+          <HubCard 
+            title="Processamento em Massa"
+            description="Cole listas do ServiceNow para tratar múltiplas solicitações de GSE/UE em lote com controle de fila."
+            to="/processamento-massa"
+            colorClass="purple-500"
+            icon={<svg className="w-7 h-7 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>}
+          />
+
         </main>
 
-        {/* Footer Moderno Neoenergia */}
-        <footer className="pt-12 pb-6 text-center flex flex-col items-center justify-center gap-1">
-          <p className="text-slate-400 text-sm font-medium tracking-wide">
-            Cordialmente,
-          </p>
-          <p className="text-slate-300 text-sm font-bold tracking-wide">
-            Service Desk Neoenergia <span className="text-slate-600 font-normal">| v2.1</span>
+        <footer className="pt-20 pb-6 text-center flex flex-col items-center justify-center gap-1">
+          <p className="text-slate-500 text-sm font-bold tracking-wide">
+            Service Desk Neoenergia <span className="text-slate-700 font-normal">| HUB v1.0</span>
           </p>
         </footer>
-        
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
