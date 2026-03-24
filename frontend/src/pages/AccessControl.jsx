@@ -145,7 +145,7 @@ export default function AccessControl() {
                     <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
                     <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>🛡️ Access Control Scripts</h2>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Access Control Scripts</h2>
                     </div>
                 </div>
                 <div className="nav-buttons">
