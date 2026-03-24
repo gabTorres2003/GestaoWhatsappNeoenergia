@@ -296,7 +296,7 @@ export default function ScriptsSD() {
                 <h2>Scripts Neoenergia</h2>
                 <div className="nav-buttons">
                     <a href="/processamento-massa" className="btn-nav">⚡ Processamento em Massa</a>
-                    <a href="/access-control" className="btn-nav">← Voltar ao HUB</a>
+                    <a href="/" className="btn-nav">← Voltar ao HUB</a>
                 </div>
             </div>
 
