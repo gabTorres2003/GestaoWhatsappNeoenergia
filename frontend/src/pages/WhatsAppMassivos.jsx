@@ -168,11 +168,8 @@ const WhatsAppMassivos = () => {
 
             {/* Novo Título Unificado */}
             <h1 className="text-4xl font-extrabold text-white tracking-tight m-0">
-              Automação Minsait <span className="text-neo-green">Neoenergia</span>
+              Gestão WhatsApp <span className="text-neo-green">Neoenergia</span>
             </h1>
-            <p className="text-slate-400 font-medium">
-              Gestão de Chamados Massivos (WhatsApp)
-            </p>
           </div>
 
           <div className="flex gap-4">

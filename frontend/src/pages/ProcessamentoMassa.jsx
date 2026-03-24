@@ -174,9 +174,12 @@ export default function ProcessamentoMassa() {
                     <img src={logoMinsait} alt="Logo Minsait" style={{ height: '24px', objectFit: 'contain' }} />
                     <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
                     <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
-                    <h2 className="neo-header-generic-title">Automação Minsait Neoenergia</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <h2 className="neo-header-generic-title" style={{ margin: 0 }}>Processamento Massivo - Mesa Web</h2>
+                    </div>
                 </div>
                 <div className="nav-buttons">
+                    <Link to="/scripts-sd" className="btn-nav">Scripts Unitários</Link>
                     <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
                 </div>
             </div>

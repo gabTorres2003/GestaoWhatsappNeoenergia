@@ -112,12 +112,11 @@ export default function ScriptsSD() {
                     <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
                     <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Automação Minsait Neoenergia</h2>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Gerador de Scripts SD</span>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Gerador de Scripts Unitários SD</h2>
                     </div>
                 </div>
                 <div className="nav-buttons">
-                    <Link to="/processamento-massa" className="btn-nav">⚡ Processamento Massa</Link>
+                    <Link to="/processamento-massa" className="btn-nav">⚡ Processamento em Massa</Link>
                     <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
                 </div>
             </div>
