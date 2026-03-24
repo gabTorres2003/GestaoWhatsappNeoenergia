@@ -134,7 +134,8 @@ export default function ProcessamentoMassa() {
                 .error-box { background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; }
                 .import-area { width: 100%; min-height: 200px; background-color: var(--bg-input); border: 2px dashed var(--border-focus); border-radius: 8px; padding: 15px; color: var(--text-main); outline: none; margin-bottom: 20px; resize: vertical; }
                 
-                .nav-queue-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+                .nav-queue-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); position: sticky; top: 20px; z-index: 50; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); }
+                
                 .nav-row { display: flex; justify-content: space-between; align-items: center; }
                 .btn-queue { background-color: var(--btn-gray); color: var(--text-main); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
                 .btn-queue:hover { background-color: var(--btn-gray-hover); }
