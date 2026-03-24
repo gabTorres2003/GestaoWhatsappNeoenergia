@@ -13,20 +13,16 @@ export default function AccessControl() {
     const [senha, setSenha] = useState('');
     const [gcoExistente, setGcoExistente] = useState(false);
 
-    // Estados de Saída (Outputs)
     const [outAssunto, setOutAssunto] = useState('Controle de Acessos - Novo Usuário');
     const [outEmail, setOutEmail] = useState('');
     const [outChamado, setOutChamado] = useState('');
 
-    // Estado para Feedback visual de Cópia
     const [copiado, setCopiado] = useState({ assunto: false, email: false, chamado: false });
 
-    // Atualiza o Assunto sempre que a Ação muda
     useEffect(() => {
         setOutAssunto(acao === 'novo' ? 'Controle de Acessos - Novo Usuário' : 'Controle de Acessos - Nova Senha');
     }, [acao]);
 
-    // Atualiza a primeira aplicação selecionada quando o ambiente muda
     useEffect(() => {
         const apps = SAPS_DATABASE[ambiente] || [];
         if (apps.length > 0) {
@@ -38,31 +34,22 @@ export default function AccessControl() {
 
     const gerarScripts = () => {
         const dados = {
-            acao,
-            ambiente,
-            aplicacao,
+            acao, ambiente, aplicacao,
             nome: nome.trim().toUpperCase(),
             email_colaborador: emailColaborador.trim().toLowerCase(),
             usuario_id: usuarioId.trim().toUpperCase(),
             senha: senha.trim(),
             gcoExistente
         };
-
         const templates = gerarTemplatesAC(dados);
         setOutEmail(templates.email);
         setOutChamado(templates.chamado);
     };
 
     const limparCampos = () => {
-        setAcao('novo');
-        setAmbiente('QA');
-        setNome('');
-        setEmailColaborador('');
-        setUsuarioId('');
-        setSenha('');
-        setGcoExistente(false);
-        setOutEmail('');
-        setOutChamado('');
+        setAcao('novo'); setAmbiente('QA'); setNome('');
+        setEmailColaborador(''); setUsuarioId(''); setSenha('');
+        setGcoExistente(false); setOutEmail(''); setOutChamado('');
     };
 
     const lidarComCopia = (texto, tipo) => {
@@ -73,7 +60,6 @@ export default function AccessControl() {
         });
     };
 
-    // Lógicas de exibição de campos
     const isGco = ambiente === 'GCO' || (aplicacao && aplicacao.toUpperCase().includes('GCO'));
     const mostrarCampoId = acao !== 'senha';
     const mostrarCampoSenha = acao !== 'novo';
@@ -83,7 +69,6 @@ export default function AccessControl() {
 
     return (
         <div className="neo-container">
-            {/* ESTILOS (Mesma base da tela ScriptsSD) */}
             <style>{`
                 :root {
                     --bg-page: #0b1120;
@@ -100,29 +85,13 @@ export default function AccessControl() {
                     --success-green: #10b981;
                 }
 
-                .neo-container {
-                    padding: 30px;
-                    color: var(--text-main);
-                    font-family: system-ui, -apple-system, sans-serif;
-                    box-sizing: border-box;
-                    max-width: 1400px;
-                    margin: 0 auto;
-                }
-
-                .neo-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid var(--border-color);
-                    padding-bottom: 20px;
-                    margin-bottom: 30px;
-                }
+                .neo-container { padding: 30px; color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; max-width: 1400px; margin: 0 auto; }
+                .neo-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
                 .neo-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
                 .btn-nav { text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: 500; transition: background 0.2s; color: var(--text-main); border: 1px solid var(--border-color); background-color: transparent; }
                 .btn-nav:hover { background-color: var(--bg-card); }
 
                 .neo-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
-
                 .form-section { margin-bottom: 25px; }
                 .neo-label { display: block; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; }
 
@@ -139,8 +108,28 @@ export default function AccessControl() {
                 .neo-input { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 15px; color: var(--text-main); font-size: 0.95em; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
                 .neo-input:focus { border-color: var(--border-focus); }
                 .neo-input:read-only { background-color: var(--bg-card); border-color: transparent; color: var(--text-muted); }
-                .span-2 { grid-column: span 2; }
+                
+                /* NOVA ESTILIZAÇÃO PARA OS SELECTS */
+                .neo-select {
+                    appearance: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b9bb4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+                    background-repeat: no-repeat;
+                    background-position: right 15px center;
+                    background-size: 16px;
+                    padding-right: 40px;
+                    cursor: pointer;
+                }
+                .neo-select:hover {
+                    border-color: var(--border-focus);
+                }
+                .neo-select option {
+                    background-color: var(--bg-page);
+                    color: var(--text-main);
+                }
 
+                .span-2 { grid-column: span 2; }
                 .subject-box { display: flex; gap: 10px; margin-bottom: 25px; background: var(--bg-input); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); }
                 .subject-box input { border: none; background: transparent; flex: 1; padding: 10px 15px; color: var(--text-main); font-weight: 600; outline: none; }
                 
@@ -161,11 +150,9 @@ export default function AccessControl() {
                 .btn-copy-neo { background-color: var(--btn-gray); color: var(--text-main); border: none; padding: 6px 14px; border-radius: 4px; font-size: 0.8em; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
                 .btn-copy-neo:hover { background-color: var(--btn-gray-hover); }
                 .btn-copy-neo.copied { background-color: var(--success-green); }
-
                 .neo-textarea { width: 100%; min-height: 200px; background-color: transparent; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.9em; line-height: 1.5; resize: vertical; outline: none; }
             `}</style>
 
-            {/* Cabeçalho */}
             <div className="neo-header">
                 <h2>🛡️ Automação Access Control</h2>
                 <div className="nav-buttons">
@@ -173,10 +160,8 @@ export default function AccessControl() {
                 </div>
             </div>
 
-            {/* Card Principal de Formulário */}
             <div className="neo-card">
                 
-                {/* Tipo de Solicitação (Rádios) */}
                 <div className="form-section">
                     <span className="neo-label">TIPO DE SOLICITAÇÃO:</span>
                     <div className="radio-pill-group">
@@ -191,7 +176,6 @@ export default function AccessControl() {
                     </div>
                 </div>
 
-                {/* Box de Assunto com Botão de Copiar Integrado */}
                 <span className="neo-label">ASSUNTO DO E-MAIL</span>
                 <div className="subject-box">
                     <input type="text" value={outAssunto} readOnly />
@@ -200,11 +184,11 @@ export default function AccessControl() {
                     </button>
                 </div>
 
-                {/* Inputs do Access Control */}
                 <div className="neo-grid">
                     <div>
                         <label className="neo-label">AMBIENTE</label>
-                        <select className="neo-input" value={ambiente} onChange={(e) => setAmbiente(e.target.value)}>
+                        {/* Note a classe neo-select aqui */}
+                        <select className="neo-input neo-select" value={ambiente} onChange={(e) => setAmbiente(e.target.value)}>
                             <option value="QA">Qualidade (QA)</option>
                             <option value="DEV">Desenvolvimento (DEV)</option>
                             <option value="HANA">SAP (HANA)</option>
@@ -215,7 +199,8 @@ export default function AccessControl() {
                     
                     <div>
                         <label className="neo-label">APLICAÇÃO SAP</label>
-                        <select className="neo-input" value={aplicacao} onChange={(e) => setAplicacao(e.target.value)}>
+                        {/* E aqui também */}
+                        <select className="neo-input neo-select" value={aplicacao} onChange={(e) => setAplicacao(e.target.value)}>
                             {appsDisponiveis.map(app => (
                                 <option key={app} value={app}>{app}</option>
                             ))}
@@ -255,7 +240,6 @@ export default function AccessControl() {
                     )}
                 </div>
 
-                {/* Botões de Ação */}
                 <div className="action-row">
                     <button className="btn-neo btn-clear-neo" onClick={limparCampos}>Limpar Tudo</button>
                     <button className="btn-neo btn-generate-neo" onClick={gerarScripts}>Gerar Scripts</button>
@@ -263,9 +247,7 @@ export default function AccessControl() {
 
             </div>
 
-            {/* Cards de Output (São apenas 2 no Access Control: E-mail e Chamado) */}
             <div className="output-grid">
-                
                 <div className="neo-card" style={{ marginBottom: 0 }}>
                     <div className="output-header">
                         <span className="output-title">Para o E-mail</span>
@@ -285,7 +267,6 @@ export default function AccessControl() {
                     </div>
                     <textarea className="neo-textarea" value={outChamado} readOnly placeholder="O script gerado aparecerá aqui..."></textarea>
                 </div>
-
             </div>
         </div>
     );
