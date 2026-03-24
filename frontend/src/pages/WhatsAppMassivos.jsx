@@ -5,6 +5,7 @@ import ScriptGenerator from '../components/ScriptGenerator'
 import MassiveAlert from '../components/MassiveAlert'
 import { detectMassiveIncidents } from '../services/incidentDetector'
 import { supabase } from '../services/supabaseClient'
+import { Link } from 'react-router-dom';
 
 const WhatsAppMassivos = () => {
   const [chamados, setChamados] = useState([])
@@ -66,10 +67,9 @@ const WhatsAppMassivos = () => {
     }
 
     try {
-      // Remover campos locais que o Supabase gera (id, created_at, updated_at se houver)
       const dataToInsert = filteredNew.map((item) => {
         const { id, ...rest } = item
-        console.log('Ignorando ID local:', id) // Usando a variável para evitar erro de lint
+        console.log('Ignorando ID local:', id)
         return rest
       })
 
@@ -112,7 +112,7 @@ const WhatsAppMassivos = () => {
         const { error } = await supabase
           .from('chamados')
           .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000') // Truque para deletar tudo no Supabase se não houver where clause
+          .neq('id', '00000000-0000-0000-0000-000000000000')
 
         if (error) throw error
       } catch (error) {
@@ -145,13 +145,22 @@ const WhatsAppMassivos = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12 space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Header */}
+        {/* Header Modificado com Botão Voltar */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-4">
+              <Link 
+                to="/" 
+                className="px-3 py-1.5 text-xs font-semibold text-slate-300 bg-slate-800/50 border border-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition-colors flex items-center gap-2"
+              >
+                <span>←</span> Voltar ao HUB
+              </Link>
+            </div>
+            
             <h1 className="text-4xl font-extrabold text-white tracking-tight m-0">
               Gestão de Chamados <span className="text-neo-green">Massivos</span>
             </h1>
-            <p className="text-slate-400 mt-2 font-medium">
+            <p className="text-slate-400 font-medium">
               <span className="text-neo-blue font-bold">Indra</span> |{' '}
               <span className="text-neo-orange font-bold">Minsait</span> —
               Service Desk Neoenergia
