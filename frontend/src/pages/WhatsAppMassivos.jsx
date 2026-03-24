@@ -6,6 +6,8 @@ import MassiveAlert from '../components/MassiveAlert'
 import { detectMassiveIncidents } from '../services/incidentDetector'
 import { supabase } from '../services/supabaseClient'
 import { Link } from 'react-router-dom';
+import logoNeo from '../assets/logo_neo.png';
+import logoMinsait from '../assets/logo_minsait.png';
 
 const WhatsAppMassivos = () => {
   const [chamados, setChamados] = useState([])
@@ -145,9 +147,9 @@ const WhatsAppMassivos = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12 space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">
         
-        {/* Header Modificado com Botão Voltar */}
+        {/* Header Modificado com Logos Organizas e Novo Título */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <Link 
                 to="/" 
@@ -157,13 +159,19 @@ const WhatsAppMassivos = () => {
               </Link>
             </div>
             
+            {/* Seção das Logos Lado a Lado (Tailwind) */}
+            <div className="flex items-center gap-4">
+                <img src={logoMinsait} alt="Minsait" className="h-6 object-contain" />
+                <span className="text-slate-700 text-2xl font-light">|</span>
+                <img src={logoNeo} alt="Neoenergia" className="h-8 object-contain" />
+            </div>
+
+            {/* Novo Título Unificado */}
             <h1 className="text-4xl font-extrabold text-white tracking-tight m-0">
-              Gestão de Chamados <span className="text-neo-green">Massivos</span>
+              Automação Minsait <span className="text-neo-green">Neoenergia</span>
             </h1>
             <p className="text-slate-400 font-medium">
-              <span className="text-neo-blue font-bold">Indra</span> |{' '}
-              <span className="text-neo-orange font-bold">Minsait</span> —
-              Service Desk Neoenergia
+              Gestão de Chamados Massivos (WhatsApp)
             </p>
           </div>
 

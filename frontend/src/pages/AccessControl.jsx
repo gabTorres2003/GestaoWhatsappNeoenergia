@@ -1,9 +1,13 @@
+// src/pages/AccessControl.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SAPS_DATABASE, gerarTemplatesAC, copiarTextoParaClipboard } from '../services/mesaWeb/accessControlLogic';
 
+// Importando as logos
+import logoNeo from '../assets/logo_neo.png';
+import logoMinsait from '../assets/logo_minsait.png';
+
 export default function AccessControl() {
-    // Estados do Formulário
     const [acao, setAcao] = useState('novo');
     const [ambiente, setAmbiente] = useState('QA');
     const [aplicacao, setAplicacao] = useState('');
@@ -16,7 +20,6 @@ export default function AccessControl() {
     const [outAssunto, setOutAssunto] = useState('Controle de Acessos - Novo Usuário');
     const [outEmail, setOutEmail] = useState('');
     const [outChamado, setOutChamado] = useState('');
-
     const [copiado, setCopiado] = useState({ assunto: false, email: false, chamado: false });
 
     useEffect(() => {
@@ -71,23 +74,17 @@ export default function AccessControl() {
         <div className="neo-container">
             <style>{`
                 :root {
-                    --bg-page: #0b1120;
-                    --bg-card: #151e2d;
-                    --bg-input: #0b1120;
-                    --border-color: #2b3648;
-                    --border-focus: #4b5e7a;
-                    --text-main: #f8fafc;
-                    --text-muted: #8b9bb4;
-                    --brand-orange: #f95700;
-                    --brand-orange-hover: #e04e00;
-                    --btn-gray: #334155;
-                    --btn-gray-hover: #475569;
+                    --bg-page: #0b1120; --bg-card: #151e2d; --bg-input: #0b1120;
+                    --border-color: #2b3648; --border-focus: #4b5e7a;
+                    --text-main: #f8fafc; --text-muted: #8b9bb4;
+                    --brand-orange: #f95700; --brand-orange-hover: #e04e00;
+                    --btn-gray: #334155; --btn-gray-hover: #475569;
                     --success-green: #10b981;
                 }
-
                 .neo-container { padding: 30px; color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; max-width: 1400px; margin: 0 auto; }
+                
+                /* Header atualizado */
                 .neo-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
-                .neo-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
                 .btn-nav { text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: 500; transition: background 0.2s; color: var(--text-main); border: 1px solid var(--border-color); background-color: transparent; }
                 .btn-nav:hover { background-color: var(--bg-card); }
 
@@ -109,25 +106,13 @@ export default function AccessControl() {
                 .neo-input:focus { border-color: var(--border-focus); }
                 .neo-input:read-only { background-color: var(--bg-card); border-color: transparent; color: var(--text-muted); }
                 
-                /* NOVA ESTILIZAÇÃO PARA OS SELECTS */
                 .neo-select {
-                    appearance: none;
-                    -webkit-appearance: none;
-                    -moz-appearance: none;
+                    appearance: none; -webkit-appearance: none; -moz-appearance: none;
                     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b9bb4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-                    background-repeat: no-repeat;
-                    background-position: right 15px center;
-                    background-size: 16px;
-                    padding-right: 40px;
-                    cursor: pointer;
+                    background-repeat: no-repeat; background-position: right 15px center; background-size: 16px; padding-right: 40px; cursor: pointer;
                 }
-                .neo-select:hover {
-                    border-color: var(--border-focus);
-                }
-                .neo-select option {
-                    background-color: var(--bg-page);
-                    color: var(--text-main);
-                }
+                .neo-select:hover { border-color: var(--border-focus); }
+                .neo-select option { background-color: var(--bg-page); color: var(--text-main); }
 
                 .span-2 { grid-column: span 2; }
                 .subject-box { display: flex; gap: 10px; margin-bottom: 25px; background: var(--bg-input); padding: 5px; border-radius: 8px; border: 1px solid var(--border-color); }
@@ -153,8 +138,17 @@ export default function AccessControl() {
                 .neo-textarea { width: 100%; min-height: 200px; background-color: transparent; border: none; color: var(--text-muted); font-family: inherit; font-size: 0.9em; line-height: 1.5; resize: vertical; outline: none; }
             `}</style>
 
+            {/* Cabeçalho Unificado */}
             <div className="neo-header">
-                <h2>🛡️ Automação Access Control</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <img src={logoMinsait} alt="Logo Minsait" style={{ height: '24px', objectFit: 'contain' }} />
+                    <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
+                    <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Automação Minsait Neoenergia</h2>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>🛡️ Access Control</span>
+                    </div>
+                </div>
                 <div className="nav-buttons">
                     <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
                 </div>
@@ -187,7 +181,6 @@ export default function AccessControl() {
                 <div className="neo-grid">
                     <div>
                         <label className="neo-label">AMBIENTE</label>
-                        {/* Note a classe neo-select aqui */}
                         <select className="neo-input neo-select" value={ambiente} onChange={(e) => setAmbiente(e.target.value)}>
                             <option value="QA">Qualidade (QA)</option>
                             <option value="DEV">Desenvolvimento (DEV)</option>
@@ -199,7 +192,6 @@ export default function AccessControl() {
                     
                     <div>
                         <label className="neo-label">APLICAÇÃO SAP</label>
-                        {/* E aqui também */}
                         <select className="neo-input neo-select" value={aplicacao} onChange={(e) => setAplicacao(e.target.value)}>
                             {appsDisponiveis.map(app => (
                                 <option key={app} value={app}>{app}</option>
@@ -244,7 +236,6 @@ export default function AccessControl() {
                     <button className="btn-neo btn-clear-neo" onClick={limparCampos}>Limpar Tudo</button>
                     <button className="btn-neo btn-generate-neo" onClick={gerarScripts}>Gerar Scripts</button>
                 </div>
-
             </div>
 
             <div className="output-grid">

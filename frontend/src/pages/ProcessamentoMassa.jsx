@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { processarTabelaServiceNow } from '../services/mesaWeb/processamentoMassaLogic';
 import { gerarTemplatesSD, processarSenha, copiarTextoParaClipboard } from '../services/mesaWeb/scriptsSDLogic';
+import logoNeo from '../assets/logo_neo.png';
+import logoMinsait from '../assets/logo_minsait.png';
 
 export default function ProcessamentoMassa() {
     // Estados Gerais
@@ -36,6 +38,7 @@ export default function ProcessamentoMassa() {
         setViewImport(false);
     };
 
+    // Auto-gerador de Scripts: Roda sempre que o itemAtual ou seus campos mudam
     useEffect(() => {
         if (!itemAtual) return;
 
@@ -43,6 +46,7 @@ export default function ProcessamentoMassa() {
         const saudacao = itemAtual.nome ? `Olá, ${itemAtual.nome}` : 'Olá,';
         setOutNota(`${saudacao}\n\nSeu chamado se encontra na fila de atendimento para atuação.\n\nCordialmente,\nService Desk Neoenergia.`);
 
+        // Se não for prioritário, não gera Email/Chamado
         if (!itemAtual.isPriority) {
             setOutEmail('');
             setOutChamado('');
@@ -112,7 +116,10 @@ export default function ProcessamentoMassa() {
                 }
                 .neo-container { padding: 30px; color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; max-width: 1400px; margin: 0 auto; }
                 .neo-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
-                .neo-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+                
+                /* Estilo genérico para o título no cabeçalho unificado */
+                .neo-header-generic-title { margin: 0 0 0 10px; font-size: 1.5rem; font-weight: 600; }
+                
                 .btn-nav { text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: 500; transition: background 0.2s; color: var(--text-main); border: 1px solid var(--border-color); background-color: transparent; }
                 .btn-nav:hover { background-color: var(--bg-card); }
                 .neo-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
@@ -161,10 +168,15 @@ export default function ProcessamentoMassa() {
                 .radio-pill.active .radio-circle::after { content: ""; width: 6px; height: 6px; background-color: var(--text-main); border-radius: 50%; }
             `}</style>
 
+            {/* Cabeçalho Unificado com Logos e Novo Título */}
             <div className="neo-header">
-                <h2>⚡ Processamento em Massa</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <img src={logoMinsait} alt="Logo Minsait" style={{ height: '24px', objectFit: 'contain' }} />
+                    <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
+                    <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
+                    <h2 className="neo-header-generic-title">Automação Minsait Neoenergia</h2>
+                </div>
                 <div className="nav-buttons">
-                    <Link to="/scripts-sd" className="btn-nav">Scripts Unitários</Link>
                     <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
                 </div>
             </div>
