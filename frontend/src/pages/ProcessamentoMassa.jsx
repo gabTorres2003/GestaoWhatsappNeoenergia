@@ -1,276 +1,332 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { processarTabelaServiceNow } from '../services/mesaWeb/processamentoMassaLogic';
+import { gerarTemplatesSD, processarSenha, copiarTextoParaClipboard } from '../services/mesaWeb/scriptsSDLogic';
 
-const ProcessamentoMassa = () => {
-  // Estados Gerais
-  const [isImporting, setIsImporting] = useState(true);
-  const [rawData, setRawData] = useState('');
-  const [fila, setFila] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function ProcessamentoMassa() {
+    // Estados Gerais
+    const [viewImport, setViewImport] = useState(true);
+    const [rawData, setRawData] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
+    
+    // Estados da Fila
+    const [fila, setFila] = useState([]);
+    const [indexAtual, setIndexAtual] = useState(0);
 
-  // Estados do Chamado Atual
-  const [acao, setAcao] = useState('unlock'); // 'unlock' ou 'reset'
-  const [senha, setSenha] = useState('');
-  
-  // Estados dos Outputs
-  const [outEmail, setOutEmail] = useState('');
-  const [outChamado, setOutChamado] = useState('');
-  const [outNota, setOutNota] = useState('');
-  const [copiedType, setCopiedType] = useState(null);
+    // Estados de Saída (Textos Gerados)
+    const [outEmail, setOutEmail] = useState('');
+    const [outChamado, setOutChamado] = useState('');
+    const [outNota, setOutNota] = useState('');
+    const [copiado, setCopiado] = useState({ email: false, chamado: false, nota: false });
 
-  // Analisador (Parser) da Tabela do ServiceNow
-  const processarTexto = () => {
-    if (!rawData.trim()) {
-      alert('Por favor, cola a tabela do ServiceNow antes de iniciar.');
-      return;
-    }
+    const itemAtual = fila[indexAtual];
 
-    const linhas = rawData.split('\n');
-    const novaFila = [];
-
-    linhas.forEach((linha) => {
-      // Ignorar linhas vazias
-      if (!linha.trim()) return;
-      const colunas = linha.split('\t').map(c => c.trim());
-      const incIndex = colunas.findIndex(c => c.startsWith('INC'));
-      
-      if (incIndex !== -1) {
-        novaFila.push({
-          id: Math.random().toString(36).substring(7),
-          inc: colunas[incIndex] || '',
-          sistema: colunas.length > incIndex + 1 ? colunas[incIndex + 1] : 'Sistema Desconhecido',
-          nome: colunas.length > incIndex + 2 ? colunas[incIndex + 2] : '',
-          login: colunas.length > incIndex + 3 ? colunas[incIndex + 3] : '',
-          data: colunas.length > incIndex + 4 ? colunas[incIndex + 4] : '',
-          tratado: false
-        });
-      }
-    });
-
-    if (novaFila.length === 0) {
-      alert('Não foram encontrados números de INC válidos no texto colado. Verifica o formato.');
-      return;
-    }
-
-    setFila(novaFila);
-    setCurrentIndex(0);
-    setIsImporting(false);
-  };
-
-  const chamadoAtual = fila[currentIndex] || {};
-
-  // Atualiza os dados do chamado na fila quando o utilizador edita os campos manualmente
-  const updateChamadoAtual = (campo, valor) => {
-    const novaFila = [...fila];
-    novaFila[currentIndex] = { ...novaFila[currentIndex], [campo]: valor };
-    setFila(novaFila);
-  };
-
-  const toggleTratado = () => {
-    updateChamadoAtual('tratado', !chamadoAtual.tratado);
-  };
-
-  // Navegação
-  const navegar = (direcao) => {
-    let novoIndice = currentIndex + direcao;
-    if (novoIndice >= 0 && novoIndice < fila.length) {
-      setCurrentIndex(novoIndice);
-    }
-  };
-
-  // Lógica de Geração de Scripts (Semelhante ao ScriptsSD)
-  const gerarScripts = () => {
-    if (fila.length === 0) return;
-
-    const sys = chamadoAtual.sistema || '[Sistema]';
-    const nom = chamadoAtual.nome || '[Nome]';
-    const log = chamadoAtual.login || '[Login]';
-    const inc = chamadoAtual.inc || '[INC]';
-
-    const acaoTexto = acao === 'reset' ? 'resetado com nova senha' : 'desbloqueado';
-
-    // 1. E-mail
-    let email = `Olá, ${nom}\n\n`;
-    email += `Conforme solicitado no chamado ${inc}, informamos que o seu acesso ao sistema ${sys} foi ${acaoTexto}.\n\nLogin: ${log}`;
-    if (acao === 'reset' && senha) {
-      email += `\nSenha temporária: ${senha}`;
-    }
-    email += `\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contacto pelos Canais de Atendimento.\n\nCordialmente,\nService Desk Neoenergia.`;
-    setOutEmail(email);
-
-    // 2. Chamado
-    let chamadoTxt = `Atendimento realizado.\nSistema: ${sys}\nUtilizador: ${nom}\nLogin: ${log}\nAção: Acesso ${acaoTexto}.`;
-    setOutChamado(chamadoTxt);
-
-    // 3. Nota
-    let notaTxt = `Em atendimento. A realizar verificação e procedimentos de ${acao === 'unlock' ? 'desbloqueio' : 'reset'} para o login ${log} no sistema ${sys}. Retornamos em breve com a atualização.`;
-    setOutNota(notaTxt);
-  };
-
-  // Gera os scripts automaticamente sempre que muda de chamado ou de parâmetros
-  useEffect(() => {
-    gerarScripts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, fila, acao, senha]);
-
-  const copyToClipboard = async (text, type) => {
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedType(type);
-      setTimeout(() => setCopiedType(null), 2000);
-    } catch (err) {
-      console.error('Falha ao copiar:', err);
-    }
-  };
-
-  const OutputBox = ({ title, content, type }) => (
-    <div className="bg-slate-900/50 rounded-xl border border-slate-700 overflow-hidden flex flex-col h-full">
-      <div className="flex items-center justify-between p-3 border-b border-slate-700 bg-slate-800/50">
-        <h3 className="text-sm font-bold text-white">{title}</h3>
-        <button onClick={() => copyToClipboard(content, type)} className={`text-[10px] font-bold py-1.5 px-3 rounded-lg transition-all border flex items-center gap-1 ${copiedType === type ? 'bg-purple-500 text-white border-purple-500' : 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600'}`}>
-          {copiedType === type ? 'Copiado!' : 'Copiar'}
-        </button>
-      </div>
-      <textarea readOnly value={content} className="w-full h-32 p-4 bg-transparent text-slate-300 text-sm outline-none resize-none scrollbar-thin scrollbar-thumb-slate-700" placeholder="A aguardar geração..." />
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12">
-      <div className="max-w-6xl mx-auto space-y-6">
+    // Lógica de Importação
+    const handleImportar = () => {
+        setErrorMsg('');
+        const resultado = processarTabelaServiceNow(rawData);
         
-        {/* Header e Navegação */}
-        <div className="flex items-center justify-between border-b border-purple-500 pb-4">
-          <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-            <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-            Processamento em Massa
-          </h2>
-          <Link to="/" className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold py-2 px-4 rounded-xl transition-colors border border-slate-600 flex items-center gap-2">
-            <span>←</span> Voltar ao HUB
-          </Link>
-        </div>
+        if (!resultado.success) {
+            setErrorMsg(resultado.error);
+            return;
+        }
 
-        {isImporting ? (
-          /* ECRÃ DE IMPORTAÇÃO */
-          <div className="bg-slate-800/80 backdrop-blur-sm p-8 rounded-2xl border border-slate-700 shadow-xl space-y-4 max-w-3xl mx-auto mt-10 text-center">
-            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-            </div>
-            <h3 className="text-2xl font-bold text-white">Importar Fila do ServiceNow</h3>
-            <p className="text-slate-400 text-sm">Copia as linhas da tabela no ServiceNow (incluindo o INC) e cola na área abaixo.</p>
-            
-            <textarea
-              value={rawData}
-              onChange={(e) => setRawData(e.target.value)}
-              placeholder="Cola aqui a tabela..."
-              className="w-full h-48 bg-slate-900 text-slate-300 p-4 rounded-xl border-2 border-dashed border-slate-600 focus:border-purple-500 outline-none resize-none font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700"
-            />
-            
-            <button onClick={processarTexto} className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-purple-500/20 active:scale-95 text-lg">
-              Iniciar Automação
-            </button>
-          </div>
-        ) : (
-          /* ECRÃ DE FILA / PROCESSAMENTO */
-          <div className="space-y-6">
-            
-            {/* Barra de Navegação da Fila */}
-            <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
-              <button onClick={() => navegar(-1)} disabled={currentIndex === 0} className="px-6 py-2 bg-slate-700 disabled:opacity-50 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors">
-                ← Anterior
-              </button>
-              
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-black text-purple-400">
-                    {currentIndex + 1} <span className="text-slate-500 text-sm font-medium">de {fila.length}</span>
-                  </span>
-                  {chamadoAtual.tratado && (
-                    <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg> Tratado
-                    </span>
-                  )}
-                </div>
-                <button onClick={toggleTratado} className="text-xs text-slate-400 hover:text-white border border-slate-600 hover:border-slate-400 px-3 py-1 rounded-lg transition-colors">
-                  {chamadoAtual.tratado ? 'Desmarcar Tratado' : 'Marcar como Tratado ✓'}
-                </button>
-              </div>
+        setFila(resultado.fila);
+        setIndexAtual(0);
+        setViewImport(false);
+    };
 
-              <button onClick={() => navegar(1)} disabled={currentIndex === fila.length - 1} className="px-6 py-2 bg-slate-700 disabled:opacity-50 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors">
-                Próximo →
-              </button>
-            </div>
+    useEffect(() => {
+        if (!itemAtual) return;
 
-            {/* Cartão de Detalhes do Chamado */}
-            <div className={`p-6 rounded-2xl border transition-all duration-300 shadow-xl ${chamadoAtual.tratado ? 'bg-slate-800/50 border-emerald-500/30' : 'bg-slate-800 border-slate-700'}`}>
-              
-              {/* Tipo de Ação */}
-              <div className="mb-6 pb-4 border-b border-slate-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Ação:</span>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="acao" value="unlock" checked={acao === 'unlock'} onChange={() => setAcao('unlock')} className="w-4 h-4 text-purple-500 bg-slate-900 border-slate-600 focus:ring-purple-500" />
-                    <span className={`text-sm font-bold ${acao === 'unlock' ? 'text-purple-400' : 'text-slate-400 group-hover:text-slate-300'}`}>Desbloqueio</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="radio" name="acao" value="reset" checked={acao === 'reset'} onChange={() => setAcao('reset')} className="w-4 h-4 text-purple-500 bg-slate-900 border-slate-600 focus:ring-purple-500" />
-                    <span className={`text-sm font-bold ${acao === 'reset' ? 'text-purple-400' : 'text-slate-400 group-hover:text-slate-300'}`}>Reset</span>
-                  </label>
-                </div>
-                <button onClick={() => setIsImporting(true)} className="text-xs text-slate-500 hover:text-purple-400 font-bold transition-colors">
-                  ↻ Carregar Nova Lista
-                </button>
-              </div>
+        // Gera a Nota
+        const saudacao = itemAtual.nome ? `Olá, ${itemAtual.nome}` : 'Olá,';
+        setOutNota(`${saudacao}\n\nSeu chamado se encontra na fila de atendimento para atuação.\n\nCordialmente,\nService Desk Neoenergia.`);
 
-              {/* Grelha de Inputs */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div>
-                  <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">INC</label>
-                  <input type="text" readOnly value={chamadoAtual.inc || ''} className="w-full bg-slate-900/50 text-slate-300 font-mono font-bold p-3 rounded-xl border border-slate-700 outline-none text-sm" />
-                </div>
-                <div>
-                  <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Aplicação</label>
-                  <input type="text" value={chamadoAtual.sistema || ''} onChange={(e) => updateChamadoAtual('sistema', e.target.value)} className="w-full bg-slate-900 text-white font-bold p-3 rounded-xl border border-slate-700 focus:border-purple-500 outline-none transition-all text-sm" />
-                </div>
-                <div>
-                  <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Data / Criado em</label>
-                  <input type="text" value={chamadoAtual.data || ''} onChange={(e) => updateChamadoAtual('data', e.target.value)} className="w-full bg-slate-900 text-white p-3 rounded-xl border border-slate-700 focus:border-purple-500 outline-none transition-all text-sm" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Colaborador</label>
-                  <input type="text" value={chamadoAtual.nome || ''} onChange={(e) => updateChamadoAtual('nome', e.target.value)} className="w-full bg-slate-900 text-white p-3 rounded-xl border border-slate-700 focus:border-purple-500 outline-none transition-all text-sm" />
-                </div>
-                <div>
-                  <label className="text-orange-500/80 text-[10px] font-bold uppercase tracking-wider flex justify-between mb-1">
-                    <span>Login</span>
-                    <span className="text-[9px]">(Verificar padrão ex: ELK)</span>
-                  </label>
-                  <input type="text" value={chamadoAtual.login || ''} onChange={(e) => updateChamadoAtual('login', e.target.value)} className="w-full bg-slate-900 text-white p-3 rounded-xl border border-orange-500/50 focus:border-orange-500 outline-none transition-all text-sm font-mono" />
-                </div>
+        if (!itemAtual.isPriority) {
+            setOutEmail('');
+            setOutChamado('');
+            return;
+        }
+
+        // Gera Email e Chamado usando a mesma lógica do ScriptsSD
+        const dadosSD = {
+            acao: itemAtual.acao,
+            registro: itemAtual.registro,
+            sistema: itemAtual.sistema,
+            nome: itemAtual.nome,
+            matricula: itemAtual.matricula,
+            senha: processarSenha(itemAtual.senha)
+        };
+
+        const { email, chamado } = gerarTemplatesSD(dadosSD);
+        setOutEmail(email);
+        setOutChamado(chamado);
+
+    }, [itemAtual]);
+
+    // Atualiza dados do item atual no estado da fila (Imutabilidade React)
+    const atualizarItemAtual = (campo, valor) => {
+        const novaFila = [...fila];
+        novaFila[indexAtual] = { ...novaFila[indexAtual], [campo]: valor };
+        setFila(novaFila);
+    };
+
+    // Navegação
+    const navegar = (direcao) => {
+        const novoIndex = indexAtual + direcao;
+        if (novoIndex >= 0 && novoIndex < fila.length) setIndexAtual(novoIndex);
+    };
+
+    const navegarSeletivo = (direcao) => {
+        let i = indexAtual + direcao;
+        while (i >= 0 && i < fila.length) {
+            if (fila[i].isPriority) {
+                setIndexAtual(i);
+                return;
+            }
+            i += direcao;
+        }
+        alert('Fim da fila de chamados técnicos (GSE/UE).');
+    };
+
+    const lidarComCopia = (texto, tipo) => {
+        if (!texto) return;
+        copiarTextoParaClipboard(texto).then(() => {
+            setCopiado({ ...copiado, [tipo]: true });
+            setTimeout(() => setCopiado({ ...copiado, [tipo]: false }), 2000);
+        });
+    };
+
+    return (
+        <div className="neo-container">
+            <style>{`
+                /* MESMA BASE DO ACCESS CONTROL */
+                :root {
+                    --bg-page: #0b1120; --bg-card: #151e2d; --bg-input: #0b1120;
+                    --border-color: #2b3648; --border-focus: #4b5e7a;
+                    --text-main: #f8fafc; --text-muted: #8b9bb4;
+                    --brand-orange: #f95700; --brand-orange-hover: #e04e00;
+                    --btn-gray: #334155; --btn-gray-hover: #475569;
+                    --success-green: #10b981;
+                }
+                .neo-container { padding: 30px; color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; box-sizing: border-box; max-width: 1400px; margin: 0 auto; }
+                .neo-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
+                .neo-header h2 { margin: 0; font-size: 1.5rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+                .btn-nav { text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: 500; transition: background 0.2s; color: var(--text-main); border: 1px solid var(--border-color); background-color: transparent; }
+                .btn-nav:hover { background-color: var(--bg-card); }
+                .neo-card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
+                .neo-label { display: block; text-transform: uppercase; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; letter-spacing: 0.5px; }
+                .neo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                .neo-input { width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 15px; color: var(--text-main); font-size: 0.95em; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+                .neo-input:focus { border-color: var(--border-focus); }
+                .neo-input:read-only { background-color: var(--bg-card); color: var(--text-muted); border-color: transparent; }
+                .span-2 { grid-column: span 2; }
                 
-                {acao === 'reset' && (
-                  <div className="md:col-span-3">
-                    <label className="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Senha Gerada</label>
-                    <input type="text" value={senha} onChange={(e) => setSenha(e.target.value)} placeholder="Cola a senha padrão ou digita a nova senha aqui..." className="w-full bg-slate-900 text-white p-3 rounded-xl border border-slate-700 focus:border-purple-500 outline-none transition-all text-sm" />
-                  </div>
-                )}
-              </div>
+                /* ESTILOS ESPECÍFICOS PROCESSAMENTO MASSA */
+                .error-box { background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 500; }
+                .import-area { width: 100%; min-height: 200px; background-color: var(--bg-input); border: 2px dashed var(--border-focus); border-radius: 8px; padding: 15px; color: var(--text-main); outline: none; margin-bottom: 20px; resize: vertical; }
+                
+                .nav-queue-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; background: var(--bg-input); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+                .nav-row { display: flex; justify-content: space-between; align-items: center; }
+                .btn-queue { background-color: var(--btn-gray); color: var(--text-main); border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+                .btn-queue:hover { background-color: var(--btn-gray-hover); }
+                .btn-queue-priority { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); flex: 1; text-align: center; }
+                .btn-queue-priority:hover { background-color: rgba(59, 130, 246, 0.2); }
+                
+                .counter-area { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+                .counter-text { font-size: 1.2em; font-weight: bold; color: var(--brand-orange); }
+                .btn-concluir { background-color: transparent; border: 1px solid var(--border-focus); color: var(--text-muted); padding: 6px 16px; border-radius: 20px; font-size: 0.8em; font-weight: 600; cursor: pointer; transition: 0.2s; }
+                .btn-concluir.tratado { background-color: rgba(16, 185, 129, 0.1); border-color: var(--success-green); color: var(--success-green); }
+
+                /* Tags de Sistema */
+                .tag-sys { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px; }
+                .tag-gse { background-color: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+                .tag-ue { background-color: rgba(249, 115, 22, 0.15); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.3); }
+                .tag-nota { background-color: var(--btn-gray); color: var(--text-muted); }
+
+                /* Outputs */
+                .output-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+                .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                .btn-copy-neo { background-color: var(--btn-gray); color: var(--text-main); border: none; padding: 6px 14px; border-radius: 4px; font-size: 0.8em; cursor: pointer; }
+                .btn-copy-neo.copied { background-color: var(--success-green); }
+                .neo-textarea { width: 100%; min-height: 150px; background-color: transparent; border: none; color: var(--text-muted); resize: vertical; outline: none; font-size: 0.9em; }
+
+                /* Radio Buttons (Reaproveitados) */
+                .radio-pill-group { display: flex; gap: 12px; }
+                .radio-pill { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 30px; cursor: pointer; font-size: 0.85em; }
+                .radio-pill.active { border-color: var(--text-main); }
+                .radio-pill input { display: none; }
+                .radio-circle { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--text-muted); display: flex; align-items: center; justify-content: center; }
+                .radio-pill.active .radio-circle::after { content: ""; width: 6px; height: 6px; background-color: var(--text-main); border-radius: 50%; }
+            `}</style>
+
+            <div className="neo-header">
+                <h2>⚡ Processamento em Massa</h2>
+                <div className="nav-buttons">
+                    <Link to="/scripts-sd" className="btn-nav">Scripts Unitários</Link>
+                    <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
+                </div>
             </div>
 
-            {/* Outputs Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-              <OutputBox title="E-mail" content={outEmail} type="email" />
-              <OutputBox title="Chamado" content={outChamado} type="chamado" />
-              <OutputBox title="Nota (15 min)" content={outNota} type="nota" />
-            </div>
+            {errorMsg && <div className="error-box">{errorMsg}</div>}
 
-          </div>
-        )}
+            {/* TELA DE IMPORTAÇÃO */}
+            {viewImport ? (
+                <div className="neo-card">
+                    <span className="neo-label">COLE A TABELA DO SERVICENOW AQUI:</span>
+                    <textarea 
+                        className="import-area" 
+                        value={rawData} 
+                        onChange={(e) => setRawData(e.target.value)}
+                        placeholder="Certifique-se de copiar incluindo a linha de cabeçalho..."
+                    />
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        <button 
+                            className="btn-queue" 
+                            style={{ backgroundColor: 'var(--brand-orange)', color: 'white', flex: 1 }}
+                            onClick={handleImportar}
+                        >
+                            Iniciar Automação
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                /* TELA DA FILA DE CHAMADOS */
+                <>
+                    {/* Barra de Navegação */}
+                    <div className="nav-queue-container">
+                        <div className="nav-row">
+                            <button className="btn-queue" onClick={() => navegar(-1)} disabled={indexAtual === 0}>← Anterior</button>
+                            
+                            <div className="counter-area">
+                                <span className="counter-text">Chamado {indexAtual + 1} de {fila.length}</span>
+                                <button 
+                                    className={`btn-concluir ${itemAtual.concluido ? 'tratado' : ''}`}
+                                    onClick={() => atualizarItemAtual('concluido', !itemAtual.concluido)}
+                                >
+                                    {itemAtual.concluido ? '✅ Tratado (Desmarcar)' : 'Marcar como Tratado ✓'}
+                                </button>
+                            </div>
+                            
+                            <button className="btn-queue" onClick={() => navegar(1)} disabled={indexAtual === fila.length - 1}>Próximo →</button>
+                        </div>
+                        <div className="nav-row" style={{ gap: '15px' }}>
+                            <button className="btn-queue btn-queue-priority" onClick={() => navegarSeletivo(-1)}>← Anterior GSE/UE</button>
+                            <button className="btn-queue btn-queue-priority" onClick={() => navegarSeletivo(1)}>Próximo GSE/UE →</button>
+                        </div>
+                    </div>
 
-      </div>
-    </div>
-  );
-};
+                    {/* Card do Chamado Atual */}
+                    {itemAtual && (
+                        <div className="neo-card" style={{ borderColor: itemAtual.isPriority ? '#3b82f6' : 'var(--border-color)' }}>
+                            
+                            {itemAtual.isPriority && (
+                                <div style={{ marginBottom: '20px' }}>
+                                    <span className="neo-label">TIPO:</span>
+                                    <div className="radio-pill-group">
+                                        <label className={`radio-pill ${itemAtual.acao === 'unlock' ? 'active' : ''}`}>
+                                            <input type="radio" checked={itemAtual.acao === 'unlock'} onChange={() => atualizarItemAtual('acao', 'unlock')} />
+                                            <div className="radio-circle"></div> Desbloqueio
+                                        </label>
+                                        <label className={`radio-pill ${itemAtual.acao === 'reset' ? 'active' : ''}`}>
+                                            <input type="radio" checked={itemAtual.acao === 'reset'} onChange={() => atualizarItemAtual('acao', 'reset')} />
+                                            <div className="radio-circle"></div> Reset
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
 
-export default ProcessamentoMassa;
+                            <div className="neo-grid">
+                                <div>
+                                    <label className="neo-label">INCIDENTE</label>
+                                    <input type="text" className="neo-input" value={itemAtual.registro} readOnly />
+                                </div>
+                                
+                                <div>
+                                    <label className="neo-label">SISTEMA IDENTIFICADO</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input type="text" className="neo-input" style={{ flex: 1 }} value={itemAtual.sistema} readOnly />
+                                        <span className={`tag-sys ${itemAtual.sistema.includes('GSE') ? 'tag-gse' : itemAtual.sistema.includes('UE WEB') ? 'tag-ue' : 'tag-nota'}`}>
+                                            {itemAtual.sistema.includes('GSE') ? 'GSE' : itemAtual.sistema.includes('UE WEB') ? 'UE' : 'NOTA'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="span-2">
+                                    <label className="neo-label">COLABORADOR</label>
+                                    <input type="text" className="neo-input" value={itemAtual.nome} onChange={(e) => atualizarItemAtual('nome', e.target.value)} />
+                                </div>
+
+                                <div>
+                                    <label className="neo-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        LOGIN
+                                        <span style={{ color: '#f59e0b', textTransform: 'none' }}>⚠️ Verifique padrão GSE</span>
+                                    </label>
+                                    <input type="text" className="neo-input" value={itemAtual.matricula} onChange={(e) => atualizarItemAtual('matricula', e.target.value)} />
+                                </div>
+
+                                <div>
+                                    <label className="neo-label">CRIADO EM</label>
+                                    <input type="text" className="neo-input" value={itemAtual.dataExibicao} readOnly />
+                                </div>
+
+                                {itemAtual.isPriority && itemAtual.acao !== 'unlock' && (
+                                    <div className="span-2">
+                                        <label className="neo-label">SENHA GERADA</label>
+                                        <input 
+                                            type="text" 
+                                            className="neo-input" 
+                                            placeholder="Cole a senha inteira aqui..."
+                                            value={itemAtual.senha} 
+                                            onChange={(e) => atualizarItemAtual('senha', e.target.value)} 
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div style={{ marginTop: '25px', textAlign: 'right' }}>
+                                <button className="btn-queue" style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)' }} onClick={() => setViewImport(true)}>
+                                    Importar Nova Lista
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Outputs */}
+                    <div className="output-grid">
+                        <div className="neo-card" style={{ marginBottom: 0, opacity: itemAtual?.isPriority ? 1 : 0.3 }}>
+                            <div className="output-header">
+                                <span className="neo-label" style={{ margin: 0 }}>E-MAIL</span>
+                                <button className={`btn-copy-neo ${copiado.email ? 'copied' : ''}`} onClick={() => lidarComCopia(outEmail, 'email')} disabled={!itemAtual?.isPriority}>
+                                    {copiado.email ? 'Copiado!' : 'Copiar'}
+                                </button>
+                            </div>
+                            <textarea className="neo-textarea" value={outEmail} readOnly placeholder="Disponível apenas para chamados técnicos..."></textarea>
+                        </div>
+
+                        <div className="neo-card" style={{ marginBottom: 0, opacity: itemAtual?.isPriority ? 1 : 0.3 }}>
+                            <div className="output-header">
+                                <span className="neo-label" style={{ margin: 0 }}>CHAMADO</span>
+                                <button className={`btn-copy-neo ${copiado.chamado ? 'copied' : ''}`} onClick={() => lidarComCopia(outChamado, 'chamado')} disabled={!itemAtual?.isPriority}>
+                                    {copiado.chamado ? 'Copiado!' : 'Copiar'}
+                                </button>
+                            </div>
+                            <textarea className="neo-textarea" value={outChamado} readOnly placeholder="Disponível apenas para chamados técnicos..."></textarea>
+                        </div>
+
+                        <div className="neo-card" style={{ marginBottom: 0 }}>
+                            <div className="output-header">
+                                <span className="neo-label" style={{ margin: 0 }}>NOTA (15 MIN)</span>
+                                <button className={`btn-copy-neo ${copiado.nota ? 'copied' : ''}`} onClick={() => lidarComCopia(outNota, 'nota')}>
+                                    {copiado.nota ? 'Copiado!' : 'Copiar'}
+                                </button>
+                            </div>
+                            <textarea className="neo-textarea" value={outNota} readOnly></textarea>
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
