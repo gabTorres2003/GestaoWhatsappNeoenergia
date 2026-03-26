@@ -3,6 +3,9 @@ import SLAIndicator from './SLAIndicator';
 
 const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
   const [copiedCol, setCopiedCol] = useState(null);
+  
+  // 1. Estado para controlar a ordenação do SLA ('asc' ou 'desc')
+  const [ordemSla, setOrdemSla] = useState('asc');
 
   const copyColumnData = async (columnKey, columnName) => {
     if (chamados.length === 0) return;
@@ -19,6 +22,22 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
     } catch (err) {
       console.error('Falha ao copiar:', err);
     }
+  };
+
+  // 2. Lógica para ordenar os chamados baseados na data de criação (SLA)
+  const chamadosOrdenados = [...chamados].sort((a, b) => {
+    const tempoA = new Date(a.created_at).getTime();
+    const tempoB = new Date(b.created_at).getTime();
+    
+    if (ordemSla === 'asc') {
+        return tempoA - tempoB; // Mais antigos primeiro (SLA Crítico no topo)
+    } else {
+        return tempoB - tempoA; // Mais recentes primeiro
+    }
+  });
+
+  const alternarOrdemSla = () => {
+    setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
   };
 
   const HeaderCell = ({ label, columnKey }) => (
@@ -49,16 +68,31 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
           <thead>
             <tr className="bg-slate-900 text-slate-400 text-[11px] border-b border-slate-700">
               <HeaderCell label="INC" columnKey="inc" />
-              <HeaderCell label="SLA" columnKey={null} />
+              
+              <th 
+                className="px-6 py-4 font-bold uppercase tracking-wider cursor-pointer hover:text-white transition-colors group"
+                onClick={alternarOrdemSla}
+                title="Clique para ordenar pelo SLA"
+              >
+                <div className="flex items-center gap-2">
+                  SLA
+                  <span className="text-slate-500 group-hover:text-neo-green transition-colors text-lg leading-none">
+                    {ordemSla === 'asc' ? '↓' : '↑'}
+                  </span>
+                </div>
+              </th>
+
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Responsável" columnKey="equipe" />
               <HeaderCell label="Loja" columnKey="loja" />
               <HeaderCell label="Status" columnKey="status" />
-              <th className="px-6 py-4">Ações</th>
+              <th className="px-6 py-4 font-bold uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
+          
           <tbody className="divide-y divide-slate-700/50">
-            {chamados.map((chamado) => (
+            {/* AGORA USAMOS A LISTA ORDENADA! */}
+            {chamadosOrdenados.map((chamado) => (
               <tr key={chamado.id} className="hover:bg-slate-700/30 transition-colors group text-sm">
                 <td className="px-6 py-4">
                   <span className="text-slate-200 font-mono">{chamado.inc}</span>
