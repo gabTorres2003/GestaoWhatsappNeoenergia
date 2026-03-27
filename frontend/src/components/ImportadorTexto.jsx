@@ -1,3 +1,4 @@
+// src/components/ImportadorTexto.jsx
 import React, { useState } from 'react';
 import { parseWhatsAppText } from '../services/parser';
 import { classifyChamado } from '../services/classifier';
@@ -5,6 +6,15 @@ import { classifyChamado } from '../services/classifier';
 const ImportadorTexto = ({ onImported }) => {
   const [text, setText] = useState('');
   const [solicitante, setSolicitante] = useState('');
+
+  // NOVO: Função que garante o @ no início
+  const handleSolicitanteChange = (e) => {
+    let val = e.target.value;
+    if (val.length > 0 && !val.startsWith('@')) {
+      val = '@' + val;
+    }
+    setSolicitante(val);
+  };
 
   const handleImport = () => {
     if (!text.trim()) return;
@@ -15,7 +25,7 @@ const ImportadorTexto = ({ onImported }) => {
       return {
         ...item,
         ...classification,
-        solicitante: solicitante.trim(), 
+        solicitante: solicitante.trim(), // Já vai ser salvo com o @ garantido
         status: 'ABERTO',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -24,7 +34,7 @@ const ImportadorTexto = ({ onImported }) => {
 
     onImported(enrichedData);
     setText('');
-    setSolicitante('');
+    setSolicitante(''); // Limpa o campo após importar
   };
 
   return (
@@ -36,14 +46,13 @@ const ImportadorTexto = ({ onImported }) => {
         Importar do WhatsApp
       </h2>
       
-      {/* Campo para Solicitante */}
       <div className="mb-4">
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Solicitante (Opcional)</label>
           <input 
             type="text" 
             value={solicitante} 
-            onChange={(e) => setSolicitante(e.target.value)} 
-            placeholder="Ex: @João Silva" 
+            onChange={handleSolicitanteChange} 
+            placeholder="Ex: João Silva (o @ é automático)" 
             className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-600 focus:border-neo-green outline-none transition-all text-sm mb-2" 
           />
       </div>

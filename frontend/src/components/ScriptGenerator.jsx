@@ -1,4 +1,6 @@
+// src/components/ScriptGenerator.jsx
 import React, { useState, useEffect } from 'react';
+
 const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
   const [equipe, setEquipe] = useState('');
   const [colaborador, setColaborador] = useState('');
@@ -15,6 +17,15 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
   }, [chamadosSelecionados]);
 
   const selectedIncs = chamadosSelecionados ? chamadosSelecionados.map(c => c.inc) : [];
+
+  // NOVO: Função que garante o @ no início se você digitar manualmente aqui
+  const handleSolicitanteChange = (e) => {
+    let val = e.target.value;
+    if (val.length > 0 && !val.startsWith('@')) {
+      val = '@' + val;
+    }
+    setSolicitante(val);
+  };
 
   const getSaudacao = () => {
     const hora = new Date().getHours();
@@ -100,7 +111,6 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
         )}
       </div>
 
-      {/* Campos de Entrada */}
       <div className="space-y-4 mb-6">
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Equipe Designada</label>
@@ -112,11 +122,16 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
         </div>
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Solicitante (WhatsApp)</label>
-          <input type="text" value={solicitante} onChange={(e) => setSolicitante(e.target.value)} placeholder="Ex: @~Inae Franco" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
+          <input 
+            type="text" 
+            value={solicitante} 
+            onChange={handleSolicitanteChange} 
+            placeholder="Ex: Inae Franco (o @ é automático)" 
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" 
+          />
         </div>
       </div>
 
-      {/* Botões de Ação */}
       <div className="space-y-4 pt-2 border-t border-slate-700/50">
         <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1 text-center">Copiar Script Pronto</label>
         <div className="grid grid-cols-2 gap-2">
