@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import SLAIndicator from './SLAIndicator';
 
 const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onToggleSelect, onSelectAll }) => {
   const [copiedCol, setCopiedCol] = useState(null);
   const [ordemSla, setOrdemSla] = useState('asc'); 
+  const [filtroSolicitante, setFiltroSolicitante] = useState('');
 
+  const solicitantesUnicos = useMemo(() => {
+    const nomes = chamados.map(c => c.solicitante).filter(Boolean); // Pega apenas os que têm nome
+    return [...new Set(nomes)].sort(); 
+  }, [chamados]);
+
+  // Lógica do tempo de SLA
   const obterTempoSla = (chamado) => {
     if (chamado.horario) {
       try {
@@ -19,19 +26,24 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onTogg
     return new Date(chamado.created_at).getTime();
   };
 
-  const chamadosOrdenados = [...chamados].sort((a, b) => {
-    const tempoA = obterTempoSla(a);
-    const tempoB = obterTempoSla(b);
-    if (ordemSla === 'asc') {
-        return tempoA - tempoB; 
-    } else {
-        return tempoB - tempoA; 
+  const chamadosExibidos = useMemo(() => {
+    let filtrados = chamados;
+    
+    if (filtroSolicitante) {
+      filtrados = filtrados.filter(c => c.solicitante === filtroSolicitante);
     }
-  });
+
+    return filtrados.sort((a, b) => {
+      const tempoA = obterTempoSla(a);
+      const tempoB = obterTempoSla(b);
+      if (ordemSla === 'asc') return tempoA - tempoB; 
+      return tempoB - tempoA; 
+    });
+  }, [chamados, filtroSolicitante, ordemSla]);
 
   const copyColumnData = async (columnKey, columnName) => {
-    if (chamadosOrdenados.length === 0) return;
-    const dataToCopy = chamadosOrdenados.map(c => {
+    if (chamadosExibidos.length === 0) return;
+    const dataToCopy = chamadosExibidos.map(c => {
       if (columnKey === 'equipe') return c.equipe_final;
       return c[columnKey];
     }).join('\n');
@@ -68,21 +80,41 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onTogg
     </th>
   );
 
-  const allSelected = chamadosOrdenados.length > 0 && selectedIds.length === chamadosOrdenados.length;
+  const handleSelectAllFiltered = (e) => {
+    onSelectAll(chamadosExibidos.map(c => c.id), e.target.checked);
+  };
+
+  const allSelected = chamadosExibidos.length > 0 && chamadosExibidos.every(c => selectedIds.includes(c.id));
 
   return (
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
+      
+      {solicitantesUnicos.length > 0 && (
+        <div className="p-4 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
+          <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Filtrar por Solicitante:</span>
+          <select 
+            value={filtroSolicitante} 
+            onChange={(e) => setFiltroSolicitante(e.target.value)}
+            className="bg-slate-800 text-white text-sm p-2 rounded-lg border border-slate-600 outline-none focus:border-neo-green cursor-pointer"
+          >
+            <option value="">Todos os Solicitantes</option>
+            {solicitantesUnicos.map(sol => (
+              <option key={sol} value={sol}>{sol}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-900 text-slate-400 text-[11px] border-b border-slate-700">
               
-              {/* Checkbox "Selecionar Todos" */}
               <th className="px-4 py-4 w-12 text-center">
                 <input 
                   type="checkbox" 
                   checked={allSelected}
-                  onChange={(e) => onSelectAll(chamadosOrdenados.map(c => c.id), e.target.checked)}
+                  onChange={handleSelectAllFiltered}
                   className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green focus:ring-offset-slate-900 cursor-pointer accent-emerald-500"
                 />
               </th>
@@ -101,7 +133,7 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onTogg
                   </span>
                 </div>
               </th>
-
+              <HeaderCell label="Solicitante" columnKey="solicitante" />
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Responsável" columnKey="equipe" />
               <HeaderCell label="Status" columnKey="status" />
@@ -110,10 +142,9 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onTogg
           </thead>
           
           <tbody className="divide-y divide-slate-700/50">
-            {chamadosOrdenados.map((chamado) => (
+            {chamadosExibidos.map((chamado) => (
               <tr key={chamado.id} className={`hover:bg-slate-700/30 transition-colors group text-sm ${selectedIds.includes(chamado.id) ? 'bg-slate-800/80' : ''}`}>
                 
-                {/* Checkbox individual */}
                 <td className="px-4 py-4 w-12 text-center">
                     <input 
                       type="checkbox" 
@@ -130,12 +161,15 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onTogg
                   <SLAIndicator createdAt={chamado.created_at} />
                 </td>
                 <td className="px-6 py-4">
+                  <span className="text-slate-300 font-semibold">{chamado.solicitante || '-'}</span>
+                </td>
+
+                <td className="px-6 py-4">
                   <span className="text-slate-300">{chamado.categoria}</span>
                 </td>
                 <td className="px-6 py-4">
                   <span className="text-slate-300">{chamado.equipe_final}</span>
                 </td>
-                {/* CÉLULA DA LOJA FOI REMOVIDA DAQUI */}
                 <td className="px-6 py-4">
                   <select
                     value={chamado.status}
