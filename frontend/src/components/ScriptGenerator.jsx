@@ -1,27 +1,20 @@
-import React, { useState } from 'react';
-
-const ScriptGenerator = ({ chamados }) => {
+import React, { useState, useEffect } from 'react';
+const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
   const [equipe, setEquipe] = useState('');
   const [colaborador, setColaborador] = useState('');
   const [solicitante, setSolicitante] = useState('');
-  const [selectedIncs, setSelectedIncs] = useState([]);
   const [copiedType, setCopiedType] = useState(null);
 
-  const isAllSelected = selectedIncs.length > 0 && selectedIncs.length === chamados.length;
-
-  const toggleAll = () => {
-    if (isAllSelected) {
-      setSelectedIncs([]);
-    } else {
-      setSelectedIncs(chamados.map(c => c.inc));
+  useEffect(() => {
+    if (chamadosSelecionados && chamadosSelecionados.length > 0) {
+      const primeiroChamado = chamadosSelecionados[0];
+      if (primeiroChamado.colaborador) setColaborador(primeiroChamado.colaborador);
+      if (primeiroChamado.solicitante) setSolicitante(primeiroChamado.solicitante);
+      if (primeiroChamado.equipe_final && !equipe) setEquipe(primeiroChamado.equipe_final);
     }
-  };
+  }, [chamadosSelecionados]);
 
-  const toggleInc = (inc) => {
-    setSelectedIncs(prev => 
-      prev.includes(inc) ? prev.filter(i => i !== inc) : [...prev, inc]
-    );
-  };
+  const selectedIncs = chamadosSelecionados ? chamadosSelecionados.map(c => c.inc) : [];
 
   const getSaudacao = () => {
     const hora = new Date().getHours();
@@ -60,7 +53,7 @@ const ScriptGenerator = ({ chamados }) => {
 
   const copyToClipboard = async (tipo) => {
     if (selectedIncs.length === 0) {
-      alert('Selecione ao menos um INC para gerar o script.');
+      alert('Selecione ao menos um INC na tabela (usando as caixinhas) para gerar o script.');
       return;
     }
     const script = generateText(tipo);
@@ -78,7 +71,7 @@ const ScriptGenerator = ({ chamados }) => {
     return (
       <button
         onClick={() => copyToClipboard(tipo)}
-        className={`text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center gap-1 active:scale-95 ${
+        className={`text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
           isCopied 
             ? 'bg-neo-green text-white border-neo-green shadow-lg shadow-neo-green/20' 
             : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600'
@@ -96,60 +89,36 @@ const ScriptGenerator = ({ chamados }) => {
 
   return (
     <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-      <h2 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
-        Gerador de Scripts
-      </h2>
-      
-      {/* Seleção de INCs com "Selecionar Todos" */}
-      <div className="mb-5 bg-slate-900/50 p-3 rounded-xl border border-slate-700">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Selecionar INCs</label>
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 hover:text-white transition-colors">
-            <input 
-              type="checkbox" 
-              checked={isAllSelected} 
-              onChange={toggleAll}
-              className="w-4 h-4 rounded border-slate-600 text-neo-green focus:ring-neo-green focus:ring-offset-slate-900 bg-slate-800"
-            />
-            Selecionar Todos
-          </label>
-        </div>
-        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 py-1">
-          {chamados.map(c => (
-            <button
-              key={c.id}
-              onClick={() => toggleInc(c.inc)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all border ${
-                selectedIncs.includes(c.inc) 
-                  ? 'bg-neo-green text-white border-neo-green' 
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-500'
-              }`}
-            >
-              {c.inc}
-            </button>
-          ))}
-          {chamados.length === 0 && <span className="text-slate-600 italic text-[10px]">Nenhum chamado disponível</span>}
-        </div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          Gerador de Scripts
+        </h2>
+        {selectedIncs.length > 0 && (
+            <span className="bg-neo-green/20 text-neo-green border border-neo-green/30 text-xs px-2 py-1 rounded-md font-bold">
+                {selectedIncs.length} selecionado(s)
+            </span>
+        )}
       </div>
 
       {/* Campos de Entrada */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-4 mb-6">
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Equipe Designada</label>
           <input type="text" value={equipe} onChange={(e) => setEquipe(e.target.value)} placeholder="Ex: N3 - Telecom" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
         </div>
         <div>
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Colaborador</label>
-          <input type="text" value={colaborador} onChange={(e) => setColaborador(e.target.value)} placeholder="Ex: João Silva" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
+          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Colaborador Final</label>
+          <input type="text" value={colaborador} onChange={(e) => setColaborador(e.target.value)} placeholder="Ex: Maria" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
         </div>
         <div>
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Solicitante</label>
+          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">Solicitante (WhatsApp)</label>
           <input type="text" value={solicitante} onChange={(e) => setSolicitante(e.target.value)} placeholder="Ex: @~Inae Franco" className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" />
         </div>
       </div>
 
       {/* Botões de Ação */}
-      <div className="space-y-4">
+      <div className="space-y-4 pt-2 border-t border-slate-700/50">
+        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1 text-center">Copiar Script Pronto</label>
         <div className="grid grid-cols-2 gap-2">
           <ButtonCopy tipo="ITNOW_EQUIPE" label="Pedir Previsão (Equipe)" />
           <ButtonCopy tipo="ITNOW_COLABORADOR" label="Retorno (Colaborador)" />

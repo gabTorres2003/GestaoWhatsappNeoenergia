@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
 import SLAIndicator from './SLAIndicator';
 
-const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
+const ChamadosTable = ({ chamados, onUpdateStatus, onRemove, selectedIds, onToggleSelect, onSelectAll }) => {
   const [copiedCol, setCopiedCol] = useState(null);
-  const [ordemSla, setOrdemSla] = useState('asc');
+  const [ordemSla, setOrdemSla] = useState('asc'); 
+
+  const obterTempoSla = (chamado) => {
+    if (chamado.horario) {
+      try {
+        const [horas, minutos] = chamado.horario.split(':').map(Number);
+        const dataReferencia = new Date();
+        dataReferencia.setHours(horas, minutos, 0, 0);
+        return dataReferencia.getTime();
+      } catch (e) {
+        console.warn("Erro ao ler horário, usando data de criação.");
+      }
+    }
+    return new Date(chamado.created_at).getTime();
+  };
 
   const chamadosOrdenados = [...chamados].sort((a, b) => {
-    const tempoA = new Date(a.created_at).getTime();
-    const tempoB = new Date(b.created_at).getTime();
-    
+    const tempoA = obterTempoSla(a);
+    const tempoB = obterTempoSla(b);
     if (ordemSla === 'asc') {
         return tempoA - tempoB; 
     } else {
@@ -18,7 +31,6 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
 
   const copyColumnData = async (columnKey, columnName) => {
     if (chamadosOrdenados.length === 0) return;
-    
     const dataToCopy = chamadosOrdenados.map(c => {
       if (columnKey === 'equipe') return c.equipe_final;
       return c[columnKey];
@@ -33,9 +45,7 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
     }
   };
 
-  const alternarOrdemSla = () => {
-    setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
-  };
+  const alternarOrdemSla = () => setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
 
   const HeaderCell = ({ label, columnKey }) => (
     <th className="px-6 py-4 font-bold uppercase tracking-wider">
@@ -58,12 +68,25 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
     </th>
   );
 
+  const allSelected = chamadosOrdenados.length > 0 && selectedIds.length === chamadosOrdenados.length;
+
   return (
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-900 text-slate-400 text-[11px] border-b border-slate-700">
+              
+              {/* Checkbox "Selecionar Todos" */}
+              <th className="px-4 py-4 w-12 text-center">
+                <input 
+                  type="checkbox" 
+                  checked={allSelected}
+                  onChange={(e) => onSelectAll(chamadosOrdenados.map(c => c.id), e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green focus:ring-offset-slate-900 cursor-pointer accent-emerald-500"
+                />
+              </th>
+
               <HeaderCell label="INC" columnKey="inc" />
               
               <th 
@@ -81,7 +104,6 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
 
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Responsável" columnKey="equipe" />
-              <HeaderCell label="Loja" columnKey="loja" />
               <HeaderCell label="Status" columnKey="status" />
               <th className="px-6 py-4 font-bold uppercase tracking-wider">Ações</th>
             </tr>
@@ -89,7 +111,18 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
           
           <tbody className="divide-y divide-slate-700/50">
             {chamadosOrdenados.map((chamado) => (
-              <tr key={chamado.id} className="hover:bg-slate-700/30 transition-colors group text-sm">
+              <tr key={chamado.id} className={`hover:bg-slate-700/30 transition-colors group text-sm ${selectedIds.includes(chamado.id) ? 'bg-slate-800/80' : ''}`}>
+                
+                {/* Checkbox individual */}
+                <td className="px-4 py-4 w-12 text-center">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(chamado.id)}
+                      onChange={() => onToggleSelect(chamado.id)}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green focus:ring-offset-slate-800 cursor-pointer accent-emerald-500"
+                    />
+                </td>
+
                 <td className="px-6 py-4">
                   <span className="text-slate-200 font-mono">{chamado.inc}</span>
                 </td>
@@ -102,14 +135,12 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
                 <td className="px-6 py-4">
                   <span className="text-slate-300">{chamado.equipe_final}</span>
                 </td>
-                <td className="px-6 py-4 text-slate-400">
-                  {chamado.loja}
-                </td>
+                {/* CÉLULA DA LOJA FOI REMOVIDA DAQUI */}
                 <td className="px-6 py-4">
                   <select
                     value={chamado.status}
                     onChange={(e) => onUpdateStatus(chamado.id, e.target.value)}
-                    className="bg-slate-900/80 text-neo-blue text-xs p-1.5 rounded-lg border border-slate-700 outline-none focus:border-neo-blue font-semibold"
+                    className="bg-slate-900/80 text-neo-blue text-xs p-1.5 rounded-lg border border-slate-700 outline-none focus:border-neo-blue font-semibold cursor-pointer"
                   >
                     <option value="ABERTO">Aberto</option>
                     <option value="DESIGNADO">Designado</option>
