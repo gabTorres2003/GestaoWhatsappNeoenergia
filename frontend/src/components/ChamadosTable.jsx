@@ -3,14 +3,23 @@ import SLAIndicator from './SLAIndicator';
 
 const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
   const [copiedCol, setCopiedCol] = useState(null);
-  
-  // 1. Estado para controlar a ordenação do SLA ('asc' ou 'desc')
   const [ordemSla, setOrdemSla] = useState('asc');
 
-  const copyColumnData = async (columnKey, columnName) => {
-    if (chamados.length === 0) return;
+  const chamadosOrdenados = [...chamados].sort((a, b) => {
+    const tempoA = new Date(a.created_at).getTime();
+    const tempoB = new Date(b.created_at).getTime();
     
-    const dataToCopy = chamados.map(c => {
+    if (ordemSla === 'asc') {
+        return tempoA - tempoB; 
+    } else {
+        return tempoB - tempoA; 
+    }
+  });
+
+  const copyColumnData = async (columnKey, columnName) => {
+    if (chamadosOrdenados.length === 0) return;
+    
+    const dataToCopy = chamadosOrdenados.map(c => {
       if (columnKey === 'equipe') return c.equipe_final;
       return c[columnKey];
     }).join('\n');
@@ -24,18 +33,6 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
     }
   };
 
-  // 2. Lógica para ordenar os chamados baseados na data de criação (SLA)
-  const chamadosOrdenados = [...chamados].sort((a, b) => {
-    const tempoA = new Date(a.created_at).getTime();
-    const tempoB = new Date(b.created_at).getTime();
-    
-    if (ordemSla === 'asc') {
-        return tempoA - tempoB; // Mais antigos primeiro (SLA Crítico no topo)
-    } else {
-        return tempoB - tempoA; // Mais recentes primeiro
-    }
-  });
-
   const alternarOrdemSla = () => {
     setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
   };
@@ -47,7 +44,7 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
         {columnKey && (
           <button 
             onClick={() => copyColumnData(columnKey, label)}
-            title={`Copiar coluna ${label}`}
+            title={`Copiar coluna ${label} na ordem atual`}
             className="text-slate-500 hover:text-neo-green transition-colors"
           >
             {copiedCol === label ? (
@@ -91,7 +88,6 @@ const ChamadosTable = ({ chamados, onUpdateStatus, onRemove }) => {
           </thead>
           
           <tbody className="divide-y divide-slate-700/50">
-            {/* AGORA USAMOS A LISTA ORDENADA! */}
             {chamadosOrdenados.map((chamado) => (
               <tr key={chamado.id} className="hover:bg-slate-700/30 transition-colors group text-sm">
                 <td className="px-6 py-4">
