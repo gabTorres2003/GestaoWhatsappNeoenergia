@@ -176,8 +176,7 @@ export default function ProcessamentoMassa() {
                     <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
                     <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <h2 className="neo-header-generic-title" style={{ margin: 0 }}>Automação Minsait Neoenergia</h2>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: '10px' }}>⚡ Processamento em Massa</span>
+                        <h2 className="neo-header-generic-title" style={{ margin: 0 }}>⚡ Processamento em Massa</h2>
                     </div>
                 </div>
                 

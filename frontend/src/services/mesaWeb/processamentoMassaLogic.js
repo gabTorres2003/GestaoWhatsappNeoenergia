@@ -23,7 +23,7 @@ export function processarTabelaServiceNow(rawData) {
             map = {
                 inc: incIdx,
                 solicitante: findIndex(['solicitante', 'caller', 'requested', 'usuário', 'usuario']),
-                criado: findIndex(['criado', 'created', 'aberto', 'opened']),
+                criado: findIndex(['criado em', 'criado', 'created', 'aberto', 'opened']),
                 desc: findIndex(['descrição resumida', 'short description', 'descrição']),
             };
             break;
@@ -43,11 +43,18 @@ export function processarTabelaServiceNow(rawData) {
     const filaProcessada = dataLines.map((linha) => {
         const col = linha.split('\t').map((c) => c.trim());
 
-        const inc = col[map.inc];
-        // Valida se o INC existe e obedece o formato
-        if (!inc || !inc.match(/^INC\d+/)) return null;
+        const realIncIndex = col.findIndex(c => c.match(/^INC\d+/));
 
-        const descricao = map.desc !== -1 && col[map.desc] ? col[map.desc].toUpperCase() : '';
+        if (realIncIndex === -1) return null;
+        const inc = col[realIncIndex];
+        const offset = realIncIndex - map.inc; 
+        const getCol = (mapIndex) => {
+            if (mapIndex === -1) return '';
+            const idx = mapIndex + offset;
+            return col[idx] ? col[idx] : '';
+        };
+
+        const descricao = getCol(map.desc).toUpperCase();
         const ehGse = descricao.includes('GSE');
         const ehUe = descricao.includes('UE WEB') || descricao.includes('UEWEB') || descricao.includes('UE-WEB');
 
@@ -59,12 +66,12 @@ export function processarTabelaServiceNow(rawData) {
             sistemaFinal = 'UE WEB (CS) - PRD';
         }
 
-        const nomeMatricula = map.solicitante !== -1 && col[map.solicitante] ? col[map.solicitante] : '';
+        const nomeMatricula = getCol(map.solicitante);
         const partes = nomeMatricula.split(' - ');
         const nomeLimpo = partes[0] ? partes[0].trim() : '';
         const matricula = partes[1] ? partes[1].split(' ')[0].trim() : '';
 
-        const dataRaw = map.criado !== -1 && col[map.criado] ? col[map.criado] : '';
+        const dataRaw = getCol(map.criado);
         const dataObj = dataRaw ? new Date(dataRaw.replace(/-/g, '/')) : new Date();
 
         return {
@@ -80,12 +87,11 @@ export function processarTabelaServiceNow(rawData) {
             concluido: false,
             senha: ''
         };
-    }).filter(Boolean); 
+    }).filter(Boolean); // Remove os nulls 
 
     if (filaProcessada.length === 0) {
-        return { success: false, error: "Nenhum chamado válido identificado nas linhas copiadas." };
+        return { success: false, error: "Nenhum chamado válido identificado nas linhas copiadas. Verifique se o texto copiado está correto." };
     }
-
     filaProcessada.sort((a, b) => a.data - b.data);
 
     return { success: true, fila: filaProcessada };
