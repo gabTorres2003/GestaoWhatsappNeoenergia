@@ -176,10 +176,24 @@ export default function ProcessamentoMassa() {
                     <span style={{ color: 'var(--border-color)', fontSize: '1.5rem', fontWeight: '300' }}>|</span>
                     <img src={logoNeo} alt="Logo Neoenergia" style={{ height: '32px', objectFit: 'contain' }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <h2 className="neo-header-generic-title" style={{ margin: 0 }}>Processamento Massivo - Mesa Web</h2>
+                        <h2 className="neo-header-generic-title" style={{ margin: 0 }}>Automação Minsait Neoenergia</h2>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: '10px' }}>⚡ Processamento em Massa</span>
                     </div>
                 </div>
-                <div className="nav-buttons">
+                
+                {/* Botões de Navegação com "Importar" em Destaque */}
+                <div className="nav-buttons" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    
+                    {!viewImport && (
+                        <button 
+                            className="btn-neo btn-generate-neo" 
+                            style={{ padding: '8px 16px', fontSize: '0.85em', borderRadius: '6px', margin: 0 }} 
+                            onClick={() => setViewImport(true)}
+                        >
+                            + Importar Nova Lista
+                        </button>
+                    )}
+
                     <Link to="/scripts-sd" className="btn-nav">Scripts Unitários</Link>
                     <Link to="/" className="btn-nav">← Voltar ao HUB</Link>
                 </div>
@@ -241,13 +255,21 @@ export default function ProcessamentoMassa() {
                                 <div style={{ marginBottom: '20px' }}>
                                     <span className="neo-label">TIPO:</span>
                                     <div className="radio-pill-group">
+                                        <label className={`radio-pill ${itemAtual.acao === 'reset' ? 'active' : ''}`}>
+                                            <input type="radio" checked={itemAtual.acao === 'reset'} onChange={() => atualizarItemAtual('acao', 'reset')} />
+                                            <div className="radio-circle"></div> Nova Senha (Reset)
+                                        </label>
                                         <label className={`radio-pill ${itemAtual.acao === 'unlock' ? 'active' : ''}`}>
                                             <input type="radio" checked={itemAtual.acao === 'unlock'} onChange={() => atualizarItemAtual('acao', 'unlock')} />
                                             <div className="radio-circle"></div> Desbloqueio
                                         </label>
-                                        <label className={`radio-pill ${itemAtual.acao === 'reset' ? 'active' : ''}`}>
-                                            <input type="radio" checked={itemAtual.acao === 'reset'} onChange={() => atualizarItemAtual('acao', 'reset')} />
-                                            <div className="radio-circle"></div> Reset
+                                        <label className={`radio-pill ${itemAtual.acao === 'disabled' ? 'active' : ''}`}>
+                                            <input type="radio" checked={itemAtual.acao === 'disabled'} onChange={() => atualizarItemAtual('acao', 'disabled')} />
+                                            <div className="radio-circle"></div> Desabilitado
+                                        </label>
+                                        <label className={`radio-pill ${itemAtual.acao === 'not_found' ? 'active' : ''}`}>
+                                            <input type="radio" checked={itemAtual.acao === 'not_found'} onChange={() => atualizarItemAtual('acao', 'not_found')} />
+                                            <div className="radio-circle"></div> Não Encontrado
                                         </label>
                                     </div>
                                 </div>
@@ -287,7 +309,7 @@ export default function ProcessamentoMassa() {
                                     <input type="text" className="neo-input" value={itemAtual.dataExibicao} readOnly />
                                 </div>
 
-                                {itemAtual.isPriority && itemAtual.acao !== 'unlock' && (
+                                {itemAtual.isPriority && itemAtual.acao === 'reset' && (
                                     <div className="span-2">
                                         <label className="neo-label">SENHA GERADA</label>
                                         <input 
@@ -299,12 +321,6 @@ export default function ProcessamentoMassa() {
                                         />
                                     </div>
                                 )}
-                            </div>
-                            
-                            <div style={{ marginTop: '25px', textAlign: 'right' }}>
-                                <button className="btn-queue" style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)' }} onClick={() => setViewImport(true)}>
-                                    Importar Nova Lista
-                                </button>
                             </div>
                         </div>
                     )}

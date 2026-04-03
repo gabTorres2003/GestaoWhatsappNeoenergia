@@ -1,53 +1,74 @@
 export function processarTabelaServiceNow(rawData) {
     if (!rawData) return { success: false, error: "Nenhum dado inserido." };
     
-    const linhas = rawData.split('\n');
-    if (linhas.length < 2) return { success: false, error: "Tabela inválida ou sem registros." };
-
-    const header = linhas[0].split('\t').map((h) => h.trim().toLowerCase());
-    const findIndex = (keywords) => header.findIndex((h) => keywords.some((k) => h.includes(k)));
-
-    const map = {
-        inc: findIndex(['identificador', 'incident', 'inc']),
-        solicitante: findIndex(['solicitante', 'caller', 'requested', 'usuário', 'usuario']),
-        criado: findIndex(['criado', 'created', 'aberto']),
-        desc: findIndex(['descrição resumida', 'short description', 'descrição']),
-    };
-
-    if (map.inc === -1 || map.solicitante === -1) {
-        return { success: false, error: "Erro: Cabeçalho não identificado. Copie a linha de títulos da tabela." };
+    const linhas = rawData.trim().split(/\r?\n/);
+    if (linhas.length < 2) {
+        if (linhas.length === 1 && linhas[0].toLowerCase().includes("nenhum registro")) {
+            return { success: false, error: "A tabela copiada está vazia (Nenhum registro a exibir)." };
+        }
+        return { success: false, error: "Dados insuficientes. Copie a linha de títulos e os chamados." };
     }
 
-    const filaProcessada = linhas.slice(1).map((linha) => {
-        let col = linha.split('\t').map((c) => c.trim());
-        while (col.length && col[0] === '') col.shift();
+    let headerIndex = -1;
+    let map = { inc: -1, solicitante: -1, criado: -1, desc: -1 };
+
+    for (let i = 0; i < Math.min(linhas.length, 5); i++) {
+        const cols = linhas[i].split('\t').map(h => h.trim().toLowerCase());
+        const findIndex = (keywords) => cols.findIndex((h) => keywords.some((k) => h === k || h.includes(k)));
+
+        const incIdx = findIndex(['identificador', 'incident', 'inc', 'number']);
+        
+        if (incIdx !== -1) {
+            headerIndex = i;
+            map = {
+                inc: incIdx,
+                solicitante: findIndex(['solicitante', 'caller', 'requested', 'usuário', 'usuario']),
+                criado: findIndex(['criado', 'created', 'aberto', 'opened']),
+                desc: findIndex(['descrição resumida', 'short description', 'descrição']),
+            };
+            break;
+        }
+    }
+
+    if (headerIndex === -1 || map.inc === -1) {
+        return { success: false, error: "Erro: Cabeçalho não identificado. Certifique-se de copiar a linha com os nomes das colunas." };
+    }
+
+    const dataLines = linhas.slice(headerIndex + 1);
+    
+    if (dataLines.length === 0 || (dataLines.length === 1 && dataLines[0].toLowerCase().includes("nenhum registro a exibir"))) {
+        return { success: false, error: "A tabela copiada está vazia (Nenhum registro a exibir)." };
+    }
+
+    const filaProcessada = dataLines.map((linha) => {
+        const col = linha.split('\t').map((c) => c.trim());
 
         const inc = col[map.inc];
+        // Valida se o INC existe e obedece o formato
         if (!inc || !inc.match(/^INC\d+/)) return null;
 
-        const descricao = (col[map.desc] || '').toUpperCase();
+        const descricao = map.desc !== -1 && col[map.desc] ? col[map.desc].toUpperCase() : '';
         const ehGse = descricao.includes('GSE');
         const ehUe = descricao.includes('UE WEB') || descricao.includes('UEWEB') || descricao.includes('UE-WEB');
 
         let sistemaFinal = 'Apenas Nota (15 min)';
         if (ehGse) {
             const dist = descricao.match(/COELBA|COSERN|PERNAMBUCO/i);
-            // Ajustado para bater com o Select do ScriptsSD
             sistemaFinal = `GSE (${dist ? dist[0].toUpperCase() : 'COELBA'}) - PRD`; 
         } else if (ehUe) {
             sistemaFinal = 'UE WEB (CS) - PRD';
         }
 
-        const nomeMatricula = col[map.solicitante] || '';
+        const nomeMatricula = map.solicitante !== -1 && col[map.solicitante] ? col[map.solicitante] : '';
         const partes = nomeMatricula.split(' - ');
-        const nomeLimpo = partes[0].trim();
+        const nomeLimpo = partes[0] ? partes[0].trim() : '';
         const matricula = partes[1] ? partes[1].split(' ')[0].trim() : '';
 
-        const dataRaw = col[map.criado] || '';
-        const dataObj = new Date(dataRaw.replace(/-/g, '/'));
+        const dataRaw = map.criado !== -1 && col[map.criado] ? col[map.criado] : '';
+        const dataObj = dataRaw ? new Date(dataRaw.replace(/-/g, '/')) : new Date();
 
         return {
-            idUnico: Math.random().toString(36).substring(7), // Para controle interno
+            idUnico: Math.random().toString(36).substring(7),
             registro: inc,
             nome: nomeLimpo,
             matricula: matricula,
@@ -57,15 +78,14 @@ export function processarTabelaServiceNow(rawData) {
             isPriority: ehGse || ehUe,
             acao: descricao.toLowerCase().includes('reset') ? 'reset' : 'unlock',
             concluido: false,
-            senha: '' // Campo de senha vazio inicialmente
+            senha: ''
         };
-    }).filter(Boolean);
+    }).filter(Boolean); 
 
     if (filaProcessada.length === 0) {
-        return { success: false, error: "Nenhum chamado identificado." };
+        return { success: false, error: "Nenhum chamado válido identificado nas linhas copiadas." };
     }
 
-    // Ordena por data
     filaProcessada.sort((a, b) => a.data - b.data);
 
     return { success: true, fila: filaProcessada };
