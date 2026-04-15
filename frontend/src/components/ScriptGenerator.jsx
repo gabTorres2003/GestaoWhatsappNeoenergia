@@ -62,7 +62,7 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
       case 'WPP_LONGO':
         const palavraChamado = isPlural ? 'Chamados' : 'Chamado'
         const verboEncontrar = isPlural ? 'encontram-se' : 'encontra-se'
-        return `Prezado(a) ${solicitante || '[Nome do Solicitante]'}\n\n(*${palavraChamado}*) (*${incsBarra}*)\n\nComunicamos que o ${palavraChamado.toLowerCase()} ${verboEncontrar} com a equipe responsável para a verificação.\n\nSolicitamos prioridade nos atendimentos e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: *(71) 3370-6000.*`
+        return `Prezado(a) ${solicitante || '[Nome do Solicitante]'}\n\n*${palavraChamado}* (*${incsBarra}*)\n\nComunicamos que o ${palavraChamado.toLowerCase()} ${verboEncontrar} com a equipe responsável para a verificação.\n\nSolicitamos prioridade nos atendimentos e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: *(71) 3370-6000.*`
 
       default:
         return ''
