@@ -23,7 +23,6 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
     ? chamadosSelecionados.map((c) => c.inc)
     : []
 
-  // NOVO: Função que garante o @ no início se você digitar manualmente aqui
   const handleSolicitanteChange = (e) => {
     let val = e.target.value
     if (val.length > 0 && !val.startsWith('@')) {
@@ -55,9 +54,6 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
         const saudacaoColab = colaborador ? `Olá, ${colaborador}` : `Olá,`
 
         return `${saudacaoColab}\n\nÉ um prazer poder te ajudar, por isso documentamos todas as informações fornecidas. Destacamos a prioridade e solicitamos um retorno da equipe responsável, para fornecer uma previsão de atendimento para a solução do seu caso.\n\nPara acompanhar o andamento com o status atualizado, basta localizar o ${incTextItnow} no ITNow (https://iberdrola.service-now.com/itnow), diretamente pela aba CONSULTAS. Além disso, caso seja necessário, você pode adicionar mais informações relevantes e novas evidências sobre o erro.\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contato pelos Canais de Atendimento listados abaixo:\n\nChat via ITNOW: https://iberdrola.service-now.com/itnow\nTelefone Externo: 7133706000\n\nCordialmente,\nService Desk Neoenergia.`
-
-      case 'WPP_CURTO':
-        return `${getSaudacao()}, ${solicitante || '[Nome do Solicitante]'}!\nSolicitada a prioridade e previsão de atendimento! (*${incsListados}*)\nVoltamos em 15 minutos com mais informações!`
 
       case 'WPP_LONGO':
         const palavraChamado = isPlural ? 'Chamados' : 'Chamado'
