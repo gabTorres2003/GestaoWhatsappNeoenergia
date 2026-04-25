@@ -101,6 +101,21 @@ const WhatsAppMassivos = () => {
 
   const chamadosSelecionados = chamados.filter(c => selectedIds.includes(c.id));
 
+  const updateMassiveFields = (updates) => {
+  setChamados((prev) =>
+    prev.map((c) =>
+      selectedIds.includes(c.id) 
+        ? { 
+            ...c, 
+            ...updates, 
+            updated_at: new Date().toISOString(),
+            finalizado_em: updates.status && updates.status !== 'ABERTO' ? new Date().toISOString() : c.finalizado_em
+          } 
+        : c
+    )
+  );
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12 space-y-8">
       <div className="max-w-7xl mx-auto space-y-8">

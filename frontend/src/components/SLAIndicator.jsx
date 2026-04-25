@@ -19,6 +19,14 @@ const SLAIndicator = ({ createdAt }) => {
     'ATRASADO': '🔴'
   };
 
+  if (statusAtual !== 'ABERTO') {
+    return {
+      status: 'CONCLUIDO',
+      color: 'text-slate-400',
+      formattedTime: '--:--'
+    };
+  }
+
   return (
     <div className={`flex items-center gap-2 font-mono font-bold ${color}`}>
       <span>{statusIcons[status]}</span>

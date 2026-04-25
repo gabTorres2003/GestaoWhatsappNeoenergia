@@ -22,6 +22,14 @@ export const calculateSLA = (dataCriacao) => {
     color = 'text-rose-500';
   }
 
+  if (statusAtual !== 'ABERTO') {
+    return {
+      status: 'CONCLUIDO',
+      color: 'text-slate-400',
+      formattedTime: '--:--'
+    };
+  }
+
   return {
     deadline,
     minutesLeft: diffMinutes,

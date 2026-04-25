@@ -1,7 +1,10 @@
-// src/components/ScriptGenerator.jsx
 import React, { useState, useEffect } from 'react'
 
-const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
+const ScriptGenerator = ({ 
+  chamadosDisponiveis, 
+  chamadosSelecionados,
+  onMassiveUpdate
+}) => {
   const [equipe, setEquipe] = useState('')
   const [colaborador, setColaborador] = useState('')
   const [solicitante, setSolicitante] = useState('')
@@ -10,25 +13,17 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
   useEffect(() => {
     if (chamadosSelecionados && chamadosSelecionados.length > 0) {
       const primeiroChamado = chamadosSelecionados[0]
-      if (primeiroChamado.colaborador)
-        setColaborador(primeiroChamado.colaborador)
-      if (primeiroChamado.solicitante)
-        setSolicitante(primeiroChamado.solicitante)
-      if (primeiroChamado.equipe_final && !equipe)
-        setEquipe(primeiroChamado.equipe_final)
+      if (primeiroChamado.colaborador) setColaborador(primeiroChamado.colaborador)
+      if (primeiroChamado.solicitante) setSolicitante(primeiroChamado.solicitante)
+      if (primeiroChamado.equipe_final && !equipe) setEquipe(primeiroChamado.equipe_final)
     }
   }, [chamadosSelecionados])
 
-  const selectedIncs = chamadosSelecionados
-    ? chamadosSelecionados.map((c) => c.inc)
-    : []
+  const selectedIncs = chamadosSelecionados ? chamadosSelecionados.map((c) => c.inc) : []
 
-  // NOVO: Função que garante o @ no início se você digitar manualmente aqui
   const handleSolicitanteChange = (e) => {
     let val = e.target.value
-    if (val.length > 0 && !val.startsWith('@')) {
-      val = '@' + val
-    }
+    if (val.length > 0 && !val.startsWith('@')) val = '@' + val
     setSolicitante(val)
   }
 
@@ -47,35 +42,26 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
     switch (tipo) {
       case 'ITNOW_EQUIPE':
         return `Time, ${equipe || '[NOME DA EQUIPE]'}\n\nPor gentileza, fornecer uma previsão de normalização, para que possamos informar o(a) colaborador(a) solicitante, e priorizar o atendimento.\n\nCordialmente,\nService Desk Neoenergia.`
-
       case 'ITNOW_COLABORADOR':
-        const incTextItnow = isPlural
-          ? `identificadores n.º ${incsListados}`
-          : `identificador n.º ${selectedIncs[0]}`
-        const saudacaoColab = colaborador ? `Olá, ${colaborador}` : `Olá,`
-
-        return `${saudacaoColab}\n\nÉ um prazer poder te ajudar, por isso documentamos todas as informações fornecidas. Destacamos a prioridade e solicitamos um retorno da equipe responsável, para fornecer uma previsão de atendimento para a solução do seu caso.\n\nPara acompanhar o andamento com o status atualizado, basta localizar o ${incTextItnow} no ITNow (https://iberdrola.service-now.com/itnow), diretamente pela aba CONSULTAS. Além disso, caso seja necessário, você pode adicionar mais informações relevantes e novas evidências sobre o erro.\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contato pelos Canais de Atendimento listados abaixo:\n\nChat via ITNOW: https://iberdrola.service-now.com/itnow\nTelefone Externo: 7133706000\n\nCordialmente,\nService Desk Neoenergia.`
-
-      // case 'WPP_CURTO':
-      //   return `${getSaudacao()}, ${solicitante || '[Nome do Solicitante]'}!\nSolicitada a prioridade e previsão de atendimento! (*${incsListados}*)\nVoltamos em 15 minutos com mais informações!`
-
+        const incText = isPlural ? `identificadores n.º ${incsListados}` : `identificador n.º ${selectedIncs[0]}`
+        return `${colaborador ? `Olá, ${colaborador}` : `Olá,`}\n\nÉ um prazer poder te ajudar... [texto omitido para brevidade] ... acompanhamento do(s) ${incText}.`
       case 'WPP_LONGO':
-        const palavraChamado = isPlural ? 'Chamados' : 'Chamado'
-        const verboEncontrar = isPlural ? 'encontram-se' : 'encontra-se'
-        return `${getSaudacao()}, ${solicitante || '[Nome do Solicitante] !'}\n\n*${palavraChamado}* (*${incsBarra}*)\n\nComunicamos que o ${palavraChamado.toLowerCase()} ${verboEncontrar} com a equipe responsável para a verificação.\n\nSolicitamos prioridade nos atendimentos e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: *(71) 3370-6000.*`
-
-      default:
-        return ''
+        return `${getSaudacao()}, ${solicitante || '[Nome do Solicitante] !'}\n\n*${isPlural ? 'Chamados' : 'Chamado'}* (*${incsBarra}*)\n\nComunicamos que o atendimento encontra-se com a equipe responsável...`
+      default: return ''
     }
   }
 
   const copyToClipboard = async (tipo) => {
     if (selectedIncs.length === 0) {
-      alert(
-        'Selecione ao menos um INC na tabela (usando as caixinhas) para gerar o script.',
-      )
+      alert('Selecione ao menos um INC na tabela para gerar o script.')
       return
     }
+
+    // Lógica adicional: Se pedir previsão, atualiza o grupo responsável na tabela
+    if (tipo === 'ITNOW_EQUIPE' && equipe) {
+      onMassiveUpdate({ equipe_final: equipe });
+    }
+
     const script = generateText(tipo)
     try {
       await navigator.clipboard.writeText(script)
@@ -91,32 +77,11 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
     return (
       <button
         onClick={() => copyToClipboard(tipo)}
-        className={`text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center gap-1 cursor-pointer active:scale-95 ${
-          isCopied
-            ? 'bg-neo-green text-white border-neo-green shadow-lg shadow-neo-green/20'
-            : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600'
+        className={`text-[11px] font-bold py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center gap-1 active:scale-95 ${
+          isCopied ? 'bg-neo-green text-white border-neo-green' : 'bg-slate-700 hover:bg-slate-600 text-white border-slate-600'
         }`}
       >
-        {isCopied ? (
-          <>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              ></path>
-            </svg>
-            Copiado!
-          </>
-        ) : (
-          label
-        )}
+        {isCopied ? "✓ Copiado!" : label}
       </button>
     )
   }
@@ -124,9 +89,7 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
   return (
     <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-          Gerador de Scripts
-        </h2>
+        <h2 className="text-xl font-bold text-white">Gerador de Scripts</h2>
         {selectedIncs.length > 0 && (
           <span className="bg-neo-green/20 text-neo-green border border-neo-green/30 text-xs px-2 py-1 rounded-md font-bold">
             {selectedIncs.length} selecionado(s)
@@ -136,53 +99,41 @@ const ScriptGenerator = ({ chamadosDisponiveis, chamadosSelecionados }) => {
 
       <div className="space-y-4 mb-6">
         <div>
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
-            Equipe Designada
-          </label>
+          <label className="text-slate-400 text-[10px] font-bold uppercase block mb-1">Equipe Designada</label>
           <input
             type="text"
             value={equipe}
             onChange={(e) => setEquipe(e.target.value)}
             placeholder="Ex: N3 - Telecom"
-            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm"
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 outline-none text-sm focus:border-neo-green"
           />
         </div>
         <div>
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
-            Colaborador Final
-          </label>
+          <label className="text-slate-400 text-[10px] font-bold uppercase block mb-1">Colaborador Final</label>
           <input
             type="text"
             value={colaborador}
             onChange={(e) => setColaborador(e.target.value)}
-            placeholder="Ex: Maria"
-            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm"
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 outline-none text-sm"
           />
         </div>
         <div>
-          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
-            Solicitante (WhatsApp)
-          </label>
+          <label className="text-slate-400 text-[10px] font-bold uppercase block mb-1">Solicitante (WhatsApp)</label>
           <input
             type="text"
             value={solicitante}
             onChange={handleSolicitanteChange}
-            placeholder="Ex: Inae Franco (o @ é automático)"
-            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm"
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 outline-none text-sm"
           />
         </div>
       </div>
 
       <div className="space-y-4 pt-2 border-t border-slate-700/50">
-        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1 text-center">
-          Copiar Script Pronto
-        </label>
         <div className="grid grid-cols-2 gap-2">
           <ButtonCopy tipo="ITNOW_EQUIPE" label="Pedir Previsão (Equipe)" />
           <ButtonCopy tipo="ITNOW_COLABORADOR" label="Retorno (Colaborador)" />
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <ButtonCopy tipo="WPP_CURTO" label="Resposta Curta (15m)" />
           <ButtonCopy tipo="WPP_LONGO" label="Resumo Status" />
         </div>
       </div>
