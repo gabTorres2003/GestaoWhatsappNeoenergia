@@ -12,6 +12,7 @@ import logoMinsait from '../assets/logo_minsait.png';
 const WhatsAppMassivos = () => {
   const [chamados, setChamados] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+
   const getMessageDate = (timeString) => {
     if (!timeString) return new Date().toISOString();
     if (timeString.includes('T') || timeString.includes('-')) return new Date(timeString).toISOString();
@@ -84,6 +85,21 @@ const WhatsAppMassivos = () => {
     }
   };
 
+  const updateMassiveFields = (updates) => {
+    setChamados((prev) =>
+      prev.map((c) =>
+        selectedIds.includes(c.id) 
+          ? { 
+              ...c, 
+              ...updates, 
+              updated_at: new Date().toISOString(),
+              finalizado_em: updates.status && updates.status !== 'ABERTO' ? new Date().toISOString() : c.finalizado_em
+            } 
+          : c
+      )
+    );
+  };
+
   const { stats, massives } = useMemo(() => {
     const now = new Date();
     const stats = {
@@ -100,21 +116,6 @@ const WhatsAppMassivos = () => {
   }, [chamados]);
 
   const chamadosSelecionados = chamados.filter(c => selectedIds.includes(c.id));
-
-  const updateMassiveFields = (updates) => {
-  setChamados((prev) =>
-    prev.map((c) =>
-      selectedIds.includes(c.id) 
-        ? { 
-            ...c, 
-            ...updates, 
-            updated_at: new Date().toISOString(),
-            finalizado_em: updates.status && updates.status !== 'ABERTO' ? new Date().toISOString() : c.finalizado_em
-          } 
-        : c
-    )
-  );
-};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a192f] via-slate-900 to-[#0f172a] p-6 md:p-12 space-y-8">
@@ -184,7 +185,8 @@ const WhatsAppMassivos = () => {
                 onRemove={removeChamado}
                 selectedIds={selectedIds}             
                 onToggleSelect={handleToggleSelect}   
-                onSelectAll={handleSelectAll}         
+                onSelectAll={handleSelectAll}  
+                onMassiveUpdate={updateMassiveFields} 
               />
             ) : (
               <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 rounded-3xl p-20 text-center">

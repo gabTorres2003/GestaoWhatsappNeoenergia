@@ -1,15 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { calculateSLA } from '../services/sla';
 
-const SLAIndicator = ({ createdAt }) => {
+const SLAIndicator = ({ createdAt, status: ticketStatus }) => {
   const [sla, setSLA] = useState(calculateSLA(createdAt));
 
   useEffect(() => {
+    if (ticketStatus && ticketStatus !== 'ABERTO') return;
+
     const timer = setInterval(() => {
       setSLA(calculateSLA(createdAt));
     }, 1000);
+    
     return () => clearInterval(timer);
-  }, [createdAt]);
+  }, [createdAt, ticketStatus]);
+
+  if (ticketStatus && ticketStatus !== 'ABERTO') {
+    return (
+      <div className="flex items-center gap-2 font-mono font-bold text-slate-500">
+        <span title="Concluído/Pausado">✔️</span>
+        <span className="text-sm">--:--</span>
+      </div>
+    );
+  }
 
   const { status, formattedTime, color } = sla;
 
@@ -18,14 +30,6 @@ const SLAIndicator = ({ createdAt }) => {
     'PROXIMO_ATRASO': '🟡',
     'ATRASADO': '🔴'
   };
-
-  if (statusAtual !== 'ABERTO') {
-    return {
-      status: 'CONCLUIDO',
-      color: 'text-slate-400',
-      formattedTime: '--:--'
-    };
-  }
 
   return (
     <div className={`flex items-center gap-2 font-mono font-bold ${color}`}>
