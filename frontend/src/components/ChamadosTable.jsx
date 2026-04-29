@@ -69,7 +69,6 @@ const ChamadosTable = ({
 
   return (
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
-      {/* Barra de Ações Massivas */}
       {(selectedIds || []).length > 0 && (
         <div className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 flex flex-wrap gap-4 items-center">
           <span className="text-white text-xs font-bold uppercase tracking-widest">{selectedIds.length} Selecionados:</span>
@@ -124,19 +123,7 @@ const ChamadosTable = ({
             }}
             className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-40 shadow-inner"
           />
-
-          {/* Cliente Massivo */}
-          <input 
-            type="text"
-            placeholder="Mudar Nome Cliente..."
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.target.value.trim() !== '') {
-                onMassiveUpdate({ cliente_nome: e.target.value.trim() });
-                e.target.value = '';
-              }
-            }}
-            className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-40 shadow-inner"
-          />
+          {/* Campo "Mudar Nome Cliente" removido daqui */}
         </div>
       )}
 

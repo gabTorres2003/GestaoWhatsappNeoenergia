@@ -62,6 +62,7 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
         </span>
       </div>
 
+      {/* Alerta Visual do Grupo de Destino */}
       {primeiroChamado.equipe_final && (
         <div className="bg-neo-green/10 border border-neo-green/30 p-3 rounded-xl transition-all">
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
@@ -83,11 +84,12 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
             value={primeiroChamado.cliente_nome || ''} 
             onChange={(e) => {
               if (typeof onMassiveUpdate === 'function') {
+                // Atualiza o nome do cliente para todos os chamados selecionados
                 onMassiveUpdate({ cliente_nome: e.target.value });
               }
             }}
             placeholder="Ex: Joyce" 
-            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" 
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm shadow-inner" 
           />
         </div>
       </div>
