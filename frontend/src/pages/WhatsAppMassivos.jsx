@@ -163,6 +163,7 @@ const WhatsAppMassivos = () => {
             <ScriptGenerator 
               chamadosDisponiveis={chamados.filter((c) => c.status !== 'RESOLVIDO')} 
               chamadosSelecionados={chamadosSelecionados} 
+              onMassiveUpdate={updateMassiveFields}
             />
           </div>
 

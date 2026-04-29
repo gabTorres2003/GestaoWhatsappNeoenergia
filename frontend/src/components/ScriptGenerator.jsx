@@ -4,30 +4,39 @@ import { getWhatsAppTemplates } from '../services/templates';
 const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
   const [primeiroChamado, setPrimeiroChamado] = useState({});
   const [copiedId, setCopiedId] = useState(null);
+  // Estado local para permitir digitação fluida sem travar
+  const [nomeLocal, setNomeLocal] = useState('');
 
   useEffect(() => {
     if (chamadosSelecionados && chamadosSelecionados.length > 0) {
       setPrimeiroChamado(chamadosSelecionados[0]);
+      setNomeLocal(chamadosSelecionados[0].cliente_nome || '');
     } else {
       setPrimeiroChamado({});
+      setNomeLocal('');
     }
   }, [chamadosSelecionados]);
 
   const getGrupoDestino = (mesa) => {
     if (!mesa) return null;
-    
     const networking = ["L2-NE-IT NOC", "L2-NE-IT NETWORK", "L2-NE-IT NETWORK SECURITY"];
-    
     if (networking.includes(mesa)) return "ITOM NEO . BOC - Networking";
     if (mesa === "L2-NE-IT BOC") return "ITOM NEO . BOC - NOC";
     if (mesa === "L2-NE-IT SO UNIX") return "ITOM NEO . BOC - Unix";
     if (mesa === "L2-NE-IT SAP BASIS") return "ITOM NEO . BOC - SAP Basics";
-    
     return "Mesa sem grupo mapeado";
   };
 
   const grupoDestino = getGrupoDestino(primeiroChamado.equipe_final);
   const templates = getWhatsAppTemplates(chamadosSelecionados);
+
+  const handleNomeChange = (e) => {
+    const novoNome = e.target.value;
+    setNomeLocal(novoNome); // Atualiza o input visualmente na hora
+    if (typeof onMassiveUpdate === 'function') {
+      onMassiveUpdate({ cliente_nome: novoNome }); // Atualiza os INCs selecionados
+    }
+  };
 
   const copyToClipboard = async (script, id) => {
     try {
@@ -62,7 +71,6 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
         </span>
       </div>
 
-      {/* Alerta Visual do Grupo de Destino */}
       {primeiroChamado.equipe_final && (
         <div className="bg-neo-green/10 border border-neo-green/30 p-3 rounded-xl transition-all">
           <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
@@ -81,13 +89,8 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
           </label>
           <input 
             type="text" 
-            value={primeiroChamado.cliente_nome || ''} 
-            onChange={(e) => {
-              if (typeof onMassiveUpdate === 'function') {
-                // Atualiza o nome do cliente para todos os chamados selecionados
-                onMassiveUpdate({ cliente_nome: e.target.value });
-              }
-            }}
+            value={nomeLocal} 
+            onChange={handleNomeChange}
             placeholder="Ex: Joyce" 
             className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm shadow-inner" 
           />

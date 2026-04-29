@@ -73,7 +73,6 @@ const ChamadosTable = ({
         <div className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 flex flex-wrap gap-4 items-center">
           <span className="text-white text-xs font-bold uppercase tracking-widest">{selectedIds.length} Selecionados:</span>
           
-          {/* Status Massivo */}
           <select 
             onChange={(e) => {
               if(e.target.value) {
@@ -90,7 +89,6 @@ const ChamadosTable = ({
             <option value="CANCELADO">Cancelado</option>
           </select>
 
-          {/* Mesa/Equipe Massivo */}
           <select 
             onChange={(e) => {
               if(e.target.value) {
@@ -109,7 +107,6 @@ const ChamadosTable = ({
             <option value="L2-NE-IT SAP BASIS">L2-NE-IT SAP BASIS</option>
           </select>
 
-          {/* Solicitante Massivo */}
           <input 
             type="text"
             placeholder="Mudar Solicitante..."
@@ -123,7 +120,6 @@ const ChamadosTable = ({
             }}
             className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-40 shadow-inner"
           />
-          {/* Campo "Mudar Nome Cliente" removido daqui */}
         </div>
       )}
 
