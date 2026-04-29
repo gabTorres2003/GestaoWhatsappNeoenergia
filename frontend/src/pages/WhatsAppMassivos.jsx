@@ -27,9 +27,7 @@ const WhatsAppMassivos = () => {
         now.setHours(hours, parseInt(minutes, 10), 0, 0);
         return now.toISOString();
       }
-    } catch (e) {
-      console.warn("Formato de hora desconhecido, usando hora atual.");
-    }
+    } catch (e) {}
     return new Date().toISOString();
   };
 

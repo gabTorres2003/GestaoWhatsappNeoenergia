@@ -27,9 +27,7 @@ const ChamadosTable = ({
         const dataReferencia = new Date();
         dataReferencia.setHours(horas, minutos, 0, 0);
         return dataReferencia.getTime();
-      } catch (e) {
-        console.warn("Erro ao ler horário, usando data de criação.");
-      }
+      } catch (e) {}
     }
     return new Date(chamado.created_at).getTime();
   };
@@ -57,9 +55,7 @@ const ChamadosTable = ({
       await navigator.clipboard.writeText(dataToCopy);
       setCopiedCol(columnName);
       setTimeout(() => setCopiedCol(null), 2000);
-    } catch (err) {
-      console.error('Falha ao copiar:', err);
-    }
+    } catch (err) {}
   };
 
   const alternarOrdemSla = () => setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
@@ -93,8 +89,6 @@ const ChamadosTable = ({
 
   return (
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
-      
-      {/* Barra de Ações em Massa */}
       {(selectedIds || []).length > 0 && (
         <div className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 flex flex-wrap gap-4 items-center">
           <span className="text-white text-xs font-bold uppercase">{selectedIds.length} Selecionados:</span>
@@ -103,7 +97,7 @@ const ChamadosTable = ({
             onChange={(e) => {
               if(e.target.value) {
                 onMassiveUpdate({ status: e.target.value });
-                e.target.value = ""; 
+                e.target.value = "";
               }
             }}
             className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer"
@@ -122,7 +116,6 @@ const ChamadosTable = ({
               if (e.key === 'Enter' && e.target.value.trim() !== '') {
                 let val = e.target.value.trim();
                 if (!val.startsWith('@')) val = '@' + val;
-                
                 onMassiveUpdate({ solicitante: val });
                 e.target.value = '';
               }
@@ -133,7 +126,6 @@ const ChamadosTable = ({
         </div>
       )}
 
-      {/* Barra de Filtro de Solicitante */}
       {solicitantesUnicos.length > 0 && (
         <div className="p-4 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
           <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Filtrar por Solicitante:</span>
