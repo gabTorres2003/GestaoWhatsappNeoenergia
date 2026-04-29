@@ -13,6 +13,20 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
     }
   }, [chamadosSelecionados]);
 
+  const getGrupoDestino = (mesa) => {
+    if (!mesa) return null;
+    
+    const networking = ["L2-NE-IT NOC", "L2-NE-IT NETWORK", "L2-NE-IT NETWORK SECURITY"];
+    
+    if (networking.includes(mesa)) return "ITOM NEO . BOC - Networking";
+    if (mesa === "L2-NE-IT BOC") return "ITOM NEO . BOC - NOC";
+    if (mesa === "L2-NE-IT SO UNIX") return "ITOM NEO . BOC - Unix";
+    if (mesa === "L2-NE-IT SAP BASIS") return "ITOM NEO . BOC - SAP Basics";
+    
+    return "Mesa sem grupo mapeado";
+  };
+
+  const grupoDestino = getGrupoDestino(primeiroChamado.equipe_final);
   const templates = getWhatsAppTemplates(chamadosSelecionados);
 
   const copyToClipboard = async (script, id) => {
@@ -36,8 +50,8 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
   }
 
   return (
-    <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700 space-y-6">
+      <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           ⚡ Scripts Service Desk
         </h2>
@@ -48,7 +62,18 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
         </span>
       </div>
 
-      <div className="space-y-4 mb-6">
+      {primeiroChamado.equipe_final && (
+        <div className="bg-neo-green/10 border border-neo-green/30 p-3 rounded-xl transition-all">
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">
+            Grupo de Envio (Alto Impacto):
+          </p>
+          <p className="text-neo-green font-black text-sm animate-pulse">
+            📢 {grupoDestino}
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-4">
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
             Nome do Cliente (no Script)
