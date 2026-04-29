@@ -29,8 +29,8 @@ const ChamadosTable = ({
   const copyColumnData = async (columnKey, columnName) => {
     if (chamadosExibidos.length === 0) return;
     const dataToCopy = chamadosExibidos.map(c => {
-      if (columnKey === 'equipe' || columnKey === 'equipe_final') return c.equipe_final;
-      return c[columnKey];
+      if (columnKey === 'equipe' || columnKey === 'equipe_final') return c.equipe_final || '-';
+      return c[columnKey] || '-';
     }).join('\n');
 
     try {
@@ -71,8 +71,9 @@ const ChamadosTable = ({
     <div className="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
       {(selectedIds || []).length > 0 && (
         <div className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 flex flex-wrap gap-4 items-center">
-          <span className="text-white text-xs font-bold uppercase">{selectedIds.length} Selecionados:</span>
+          <span className="text-white text-xs font-bold uppercase tracking-widest">{selectedIds.length} Selecionados:</span>
           
+          {/* Status Massivo */}
           <select 
             onChange={(e) => {
               if(e.target.value) {
@@ -80,7 +81,7 @@ const ChamadosTable = ({
                 e.target.value = "";
               }
             }}
-            className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer"
+            className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer shadow-inner"
           >
             <option value="">Alterar Status...</option>
             <option value="ABERTO">Aberto</option>
@@ -88,6 +89,8 @@ const ChamadosTable = ({
             <option value="RESOLVIDO">Resolvido</option>
             <option value="CANCELADO">Cancelado</option>
           </select>
+
+          {/* Mesa/Equipe Massivo */}
           <select 
             onChange={(e) => {
               if(e.target.value) {
@@ -95,7 +98,7 @@ const ChamadosTable = ({
                 e.target.value = "";
               }
             }}
-            className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer"
+            className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer shadow-inner"
           >
             <option value="">Alterar Mesa (Equipe)...</option>
             <option value="L2-NE-IT NOC">L2-NE-IT NOC</option>
@@ -106,6 +109,20 @@ const ChamadosTable = ({
             <option value="L2-NE-IT SAP BASIS">L2-NE-IT SAP BASIS</option>
           </select>
 
+          {/* Solicitante Massivo */}
+          <input 
+            type="text"
+            placeholder="Mudar Solicitante..."
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                onMassiveUpdate({ solicitante: e.target.value.trim() });
+                e.target.value = '';
+              }
+            }}
+            className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-40 shadow-inner"
+          />
+
+          {/* Cliente Massivo */}
           <input 
             type="text"
             placeholder="Mudar Nome Cliente..."
@@ -115,18 +132,18 @@ const ChamadosTable = ({
                 e.target.value = '';
               }
             }}
-            className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-48"
+            className="bg-slate-900 text-white text-[11px] p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-40 shadow-inner"
           />
         </div>
       )}
 
       {solicitantesUnicos.length > 0 && (
         <div className="p-4 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
-          <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Filtrar por Solicitante:</span>
+          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Filtrar por Solicitante:</span>
           <select 
             value={filtroSolicitante} 
             onChange={(e) => setFiltroSolicitante(e.target.value)}
-            className="bg-slate-800 text-white text-sm p-2 rounded-lg border border-slate-600 outline-none focus:border-neo-green cursor-pointer"
+            className="bg-slate-800 text-white text-xs p-2 rounded-lg border border-slate-600 outline-none focus:border-neo-green cursor-pointer"
           >
             <option value="">Todos os Solicitantes</option>
             {solicitantesUnicos.map(sol => (
@@ -137,15 +154,15 @@ const ChamadosTable = ({
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse text-[13px]">
           <thead>
-            <tr className="bg-slate-900 text-slate-400 text-[11px] border-b border-slate-700">
+            <tr className="bg-slate-900 text-slate-400 border-b border-slate-700">
               <th className="px-4 py-4 w-12 text-center">
                 <input 
                   type="checkbox" 
                   checked={allSelected}
                   onChange={handleSelectAllFiltered}
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green focus:ring-offset-slate-900 cursor-pointer accent-emerald-500"
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green cursor-pointer accent-emerald-500"
                 />
               </th>
               <HeaderCell label="INC" columnKey="inc" />
@@ -153,18 +170,18 @@ const ChamadosTable = ({
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Mesa" columnKey="equipe_final" />
               <HeaderCell label="Status" columnKey="status" />
-              <th className="px-6 py-4 font-bold uppercase tracking-wider">Ações</th>
+              <th className="px-6 py-4 font-bold uppercase tracking-wider text-[11px]">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-700/50">
             {chamadosExibidos.map((chamado) => (
-              <tr key={chamado.id} className={`hover:bg-slate-700/30 transition-colors text-sm ${(selectedIds || []).includes(chamado.id) ? 'bg-slate-800/80' : ''}`}>
+              <tr key={chamado.id} className={`hover:bg-slate-700/30 transition-colors ${(selectedIds || []).includes(chamado.id) ? 'bg-slate-800/80' : ''}`}>
                 <td className="px-4 py-4 w-12 text-center">
                   <input 
                     type="checkbox" 
                     checked={(selectedIds || []).includes(chamado.id)}
                     onChange={() => onToggleSelect(chamado.id)}
-                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green focus:ring-offset-slate-800 cursor-pointer accent-emerald-500"
+                    className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green cursor-pointer accent-emerald-500"
                   />
                 </td>
                 <td className="px-6 py-4 font-mono text-slate-200">{chamado.inc}</td>

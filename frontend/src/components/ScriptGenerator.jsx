@@ -13,7 +13,7 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
     }
   }, [chamadosSelecionados]);
 
-  const templates = getWhatsAppTemplates(primeiroChamado);
+  const templates = getWhatsAppTemplates(chamadosSelecionados);
 
   const copyToClipboard = async (script, id) => {
     try {
@@ -42,7 +42,9 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
           ⚡ Scripts Service Desk
         </h2>
         <span className="bg-neo-green/20 text-neo-green border border-neo-green/30 text-xs px-2 py-1 rounded-md font-bold">
-          {primeiroChamado.inc || 'INC Selecionado'}
+          {chamadosSelecionados.length > 1 
+            ? `${chamadosSelecionados.length} selecionados` 
+            : (primeiroChamado.inc || 'INC Selecionado')}
         </span>
       </div>
 
@@ -90,8 +92,7 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
       </div>
 
       <div className="mt-6 pt-4 border-t border-slate-700/50 text-[10px] text-slate-500 italic leading-relaxed text-center">
-        * Os scripts utilizam os dados do INC selecionado na tabela. 
-        A "Mesa" e o "Cliente" são preenchidos automaticamente conforme os dados da linha.
+        * Mesa e Cliente são preenchidos automaticamente conforme os dados da linha na tabela.
       </div>
     </div>
   );
