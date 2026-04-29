@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 
-const ChamadosTable = ({ 
-  chamados = [], 
-  onUpdateStatus, 
-  onRemove, 
-  selectedIds = [], 
-  onToggleSelect = () => {}, 
-  onSelectAll = () => {},
-  onMassiveUpdate = () => {} 
+const ChamadosTable = ({
+  chamados = [],
+  onUpdateStatus,
+  onRemove,
+  selectedIds = [],
+  onToggleSelect = () => { },
+  onSelectAll = () => { },
+  onMassiveUpdate = () => { }
 }) => {
   const [copiedCol, setCopiedCol] = useState(null);
   const [filtroSolicitante, setFiltroSolicitante] = useState('');
@@ -15,15 +15,23 @@ const ChamadosTable = ({
   const solicitantesUnicos = useMemo(() => {
     if (!chamados) return [];
     const nomes = chamados.map(c => c.solicitante).filter(Boolean);
-    return [...new Set(nomes)].sort(); 
+    return [...new Set(nomes)].sort();
   }, [chamados]);
+
+  const formatarHora = (isoString) => {
+    if (!isoString) return "--:--";
+    const data = new Date(isoString);
+    return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
 
   const chamadosExibidos = useMemo(() => {
     let filtrados = chamados || [];
     if (filtroSolicitante) {
       filtrados = filtrados.filter(c => c.solicitante === filtroSolicitante);
     }
-    return filtrados;
+    return [...filtrados].sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   }, [chamados, filtroSolicitante]);
 
   const copyColumnData = async (columnKey, columnName) => {
@@ -37,7 +45,7 @@ const ChamadosTable = ({
       await navigator.clipboard.writeText(dataToCopy);
       setCopiedCol(columnName);
       setTimeout(() => setCopiedCol(null), 2000);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   const handleSelectAllFiltered = (e) => {
@@ -51,7 +59,7 @@ const ChamadosTable = ({
       <div className="flex items-center gap-2">
         {label}
         {columnKey && (
-          <button 
+          <button
             onClick={() => copyColumnData(columnKey, label)}
             title={`Copiar coluna ${label} na ordem atual`}
             className="text-slate-500 hover:text-neo-green transition-colors"
@@ -72,10 +80,10 @@ const ChamadosTable = ({
       {(selectedIds || []).length > 0 && (
         <div className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 flex flex-wrap gap-4 items-center">
           <span className="text-white text-xs font-bold uppercase tracking-widest">{selectedIds.length} Selecionados:</span>
-          
-          <select 
+
+          <select
             onChange={(e) => {
-              if(e.target.value) {
+              if (e.target.value) {
                 onMassiveUpdate({ status: e.target.value });
                 e.target.value = "";
               }
@@ -89,9 +97,9 @@ const ChamadosTable = ({
             <option value="CANCELADO">Cancelado</option>
           </select>
 
-          <select 
+          <select
             onChange={(e) => {
-              if(e.target.value) {
+              if (e.target.value) {
                 onMassiveUpdate({ equipe_final: e.target.value });
                 e.target.value = "";
               }
@@ -107,7 +115,7 @@ const ChamadosTable = ({
             <option value="L2-NE-IT SAP BASIS">L2-NE-IT SAP BASIS</option>
           </select>
 
-          <input 
+          <input
             type="text"
             placeholder="Mudar Solicitante..."
             onKeyDown={(e) => {
@@ -126,8 +134,8 @@ const ChamadosTable = ({
       {solicitantesUnicos.length > 0 && (
         <div className="p-4 bg-slate-900/50 border-b border-slate-700 flex items-center justify-between">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Filtrar por Solicitante:</span>
-          <select 
-            value={filtroSolicitante} 
+          <select
+            value={filtroSolicitante}
             onChange={(e) => setFiltroSolicitante(e.target.value)}
             className="bg-slate-800 text-white text-xs p-2 rounded-lg border border-slate-600 outline-none focus:border-neo-green cursor-pointer"
           >
@@ -144,8 +152,8 @@ const ChamadosTable = ({
           <thead>
             <tr className="bg-slate-900 text-slate-400 border-b border-slate-700">
               <th className="px-4 py-4 w-12 text-center">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={allSelected}
                   onChange={handleSelectAllFiltered}
                   className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green cursor-pointer accent-emerald-500"
@@ -156,6 +164,7 @@ const ChamadosTable = ({
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Mesa" columnKey="equipe_final" />
               <HeaderCell label="Status" columnKey="status" />
+              <HeaderCell label="Horário" columnKey="created_at" />
               <th className="px-6 py-4 font-bold uppercase tracking-wider text-[11px]">Ações</th>
             </tr>
           </thead>
@@ -163,8 +172,8 @@ const ChamadosTable = ({
             {chamadosExibidos.map((chamado) => (
               <tr key={chamado.id} className={`hover:bg-slate-700/30 transition-colors ${(selectedIds || []).includes(chamado.id) ? 'bg-slate-800/80' : ''}`}>
                 <td className="px-4 py-4 w-12 text-center">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={(selectedIds || []).includes(chamado.id)}
                     onChange={() => onToggleSelect(chamado.id)}
                     className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-neo-green focus:ring-neo-green cursor-pointer accent-emerald-500"
@@ -175,6 +184,7 @@ const ChamadosTable = ({
                 <td className="px-6 py-4 text-slate-300">{chamado.categoria}</td>
                 <td className="px-6 py-4 text-slate-300">{chamado.equipe_final || '-'}</td>
                 <td className="px-6 py-4">
+
                   <select
                     value={chamado.status}
                     onChange={(e) => onUpdateStatus(chamado.id, e.target.value)}
@@ -185,6 +195,9 @@ const ChamadosTable = ({
                     <option value="RESOLVIDO">Resolvido</option>
                     <option value="CANCELADO">Cancelado</option>
                   </select>
+                </td>
+                <td className="px-6 py-4 text-slate-400 font-medium">
+                  {formatarHora(chamado.created_at)}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <button onClick={() => onRemove(chamado.id)} className="text-slate-500 hover:text-rose-400 transition-colors" title="Remover Chamado">
