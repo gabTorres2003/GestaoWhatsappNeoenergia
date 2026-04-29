@@ -14,7 +14,7 @@ export const getWhatsAppTemplates = (chamado = {}) => {
   const data = chamado.data || "xx/xx";
   const horaChamado = chamado.horario || "xx:xx";
   const descricao = chamado.descricao || "[Descrição]";
-  const solicitanteLimpo = solicitante.replace('@', '').trim();
+  const solicitanteFormatado = solicitante.startsWith('@') ? solicitante : `@${solicitante.trim()}`;
 
   return [
     {
@@ -29,7 +29,7 @@ export const getWhatsAppTemplates = (chamado = {}) => {
       label: '📣 Aviso de Verificação',
       color: 'bg-amber-500 hover:bg-amber-600',
       icon: '📣',
-      script: `${saudacao()} @${solicitanteLimpo} !\n\nChamado (*${inc}*)\n\nComunicamos que o chamado encontra-se com a equipe responsável para a verificação.\n\nSolicitamos prioridade no atendimento e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: (71) 3370-6000.\n\nCordialmente,\nService Desk Neoenergia.`
+      script: `${saudacao()} ${solicitanteFormatado} !\n\nChamado (*${inc}*)\n\nComunicamos que o chamado encontra-se com a equipe responsável para a verificação.\n\nSolicitamos prioridade no atendimento e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: (71) 3370-6000.\n\nCordialmente,\nService Desk Neoenergia.`
     },
     {
       id: 'solicitar_previsao',

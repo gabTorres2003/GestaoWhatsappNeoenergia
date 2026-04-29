@@ -98,14 +98,14 @@ const ChamadosTable = ({
             className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer"
           >
             <option value="">Alterar Mesa (Equipe)...</option>
-            <option value="N3 - Telecom">N3 - Telecom</option>
-            <option value="N2 - Field Service">N2 - Field Service</option>
-            <option value="Mesa - Aplicações">Mesa - Aplicações</option>
-            <option value="Sistemas Corporativos">Sistemas Corporativos</option>
-            <option value="Infraestrutura">Infraestrutura</option>
+            <option value="L2-NE-IT NOC">L2-NE-IT NOC</option>
+            <option value="L2-NE-IT NETWORK">L2-NE-IT NETWORK</option>
+            <option value="L2-NE-IT NETWORK SECURITY">L2-NE-IT NETWORK SECURITY</option>
+            <option value="L2-NE-IT BOC">L2-NE-IT BOC</option>
+            <option value="L2-NE-IT SO UNIX">L2-NE-IT SO UNIX</option>
+            <option value="L2-NE-IT SAP BASIS">L2-NE-IT SAP BASIS</option>
           </select>
 
-          {/* NOVO: Alteração massiva de Nome do Cliente */}
           <input 
             type="text"
             placeholder="Mudar Nome Cliente..."

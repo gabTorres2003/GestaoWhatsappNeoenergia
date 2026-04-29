@@ -8,6 +8,8 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
   useEffect(() => {
     if (chamadosSelecionados && chamadosSelecionados.length > 0) {
       setPrimeiroChamado(chamadosSelecionados[0]);
+    } else {
+      setPrimeiroChamado({});
     }
   }, [chamadosSelecionados]);
 
@@ -45,7 +47,6 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
       </div>
 
       <div className="space-y-4 mb-6">
-        {/* Campo individual para o Nome do Cliente */}
         <div>
           <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
             Nome do Cliente (no Script)
@@ -53,7 +54,11 @@ const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
           <input 
             type="text" 
             value={primeiroChamado.cliente_nome || ''} 
-            onChange={(e) => onMassiveUpdate({ cliente_nome: e.target.value })}
+            onChange={(e) => {
+              if (typeof onMassiveUpdate === 'function') {
+                onMassiveUpdate({ cliente_nome: e.target.value });
+              }
+            }}
             placeholder="Ex: Joyce" 
             className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" 
           />
