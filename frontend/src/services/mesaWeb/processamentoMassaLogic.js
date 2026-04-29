@@ -1,79 +1,60 @@
-export const processarTabelaServiceNow = (textoBruto) => {
-    if (!textoBruto || !textoBruto.trim()) {
-        return { success: false, error: 'O texto está vazio.' };
+export function processarTabelaServiceNow(rawData) {
+    if (!rawData.trim()) {
+        return { success: false, error: 'Por favor, cole os dados da tabela.' };
     }
 
-    try {
-        const linhas = textoBruto.split('\n').filter(l => l.trim() !== '');
-        if (linhas.length < 2) {
-            return { success: false, error: 'Tabela inválida. Certifique-se de copiar o cabeçalho e os dados.' };
-        }
+    const text = rawData.replace(/\r\n/g, '\n');
+    const matches = [...text.matchAll(/(INC\d+)/g)];
 
-        const cabecalho = linhas[0].split('\t').map(c => c.trim().toLowerCase());
-        
-        const mapa = {
-            inc: cabecalho.findIndex(c => c.includes('identificador') || c.includes('número') || c === 'number'),
-            solicitante: cabecalho.findIndex(c => c.includes('solicitante') || c.includes('caller')),
-            sistema: cabecalho.findIndex(c => c.includes('item de configuração') || c.includes('cmdb_ci') || c.includes('cat item')),
-            criado: cabecalho.findIndex(c => c.includes('criado em') || c.includes('opened')),
-            descricao: cabecalho.findIndex(c => c.includes('descrição resumida') || c.includes('short description')),
-            grupo: cabecalho.findIndex(c => c.includes('grupo designado') || c.includes('assignment group'))
-        };
-
-        if (mapa.inc === -1) {
-            return { success: false, error: 'Não foi possível identificar a coluna de Identificador (INC). Verifique se copiou o cabeçalho.' };
-        }
-
-        const fila = [];
-
-        for (let i = 1; i < linhas.length; i++) {
-            const colunas = linhas[i].split('\t');
-            
-            if (!colunas[mapa.inc]?.trim().startsWith('INC')) continue;
-
-            const identificador = colunas[mapa.inc]?.trim();
-            const solicitanteBruto = mapa.solicitante !== -1 ? colunas[mapa.solicitante]?.trim() : 'Solicitante não encontrado';
-            const sistemaExtraido = (mapa.sistema !== -1 && colunas[mapa.sistema]?.trim() !== '(vazia)') 
-                                    ? colunas[mapa.sistema]?.trim() 
-                                    : 'Sistema não identificado';
-            const dataCriacao = mapa.criado !== -1 ? colunas[mapa.criado]?.trim() : '--/--/----';
-            const descricao = mapa.descricao !== -1 ? colunas[mapa.descricao]?.trim() : '';
-
-            let nome = solicitanteBruto;
-            let matricula = '';
-            if (solicitanteBruto.includes(' - ')) {
-                const partes = solicitanteBruto.split(' - ');
-                nome = partes[0].trim();
-                matricula = partes[partes.length - 1].trim();
-            }
-
-            const isPriority = 
-                sistemaExtraido.toUpperCase().includes('GSE') || 
-                sistemaExtraido.toUpperCase().includes('MULTI_FACTOR') || 
-                descricao.toUpperCase().includes('GSE') ||
-                descricao.toUpperCase().includes('RESET');
-
-            fila.push({
-                id: crypto.randomUUID(),
-                registro: identificador,
-                nome: nome,
-                matricula: matricula,
-                sistema: sistemaExtraido,
-                dataExibicao: dataCriacao,
-                descricao: descricao,
-                isPriority: isPriority,
-                acao: 'reset',
-                senha: '',
-                concluido: false
-            });
-        }
-
-        if (fila.length === 0) {
-            return { success: false, error: 'Nenhum chamado válido encontrado após o cabeçalho.' };
-        }
-
-        return { success: true, fila };
-    } catch (err) {
-        return { success: false, error: 'Erro crítico: ' + err.message };
+    if (matches.length === 0) {
+        return { success: false, error: 'Nenhum incidente (INC) foi encontrado.' };
     }
-};
+
+    const fila = [];
+
+    matches.forEach((match, i) => {
+        const start = match.index;
+        const end = matches[i + 1] ? matches[i + 1].index : text.length;
+        const block = text.substring(start, end);
+
+        const incRegistro = match[1];
+
+        const dateMatch = block.match(/(\d{4}-\d{2}-\d{2})\s+?(\d{2}:\d{2}:\d{2})/);
+        let incCriadoEm = '';
+        if (dateMatch) {
+            const [_, ymd, hms] = dateMatch;
+            const [y, m, d] = ymd.split('-');
+            incCriadoEm = `${d}/${m}/${y} ${hms}`;
+        }
+
+        const solicitanteMatch = block.match(/([A-ZÀ-Ÿa-z\s]+?)\s*-\s*([A-Z0-9]{6,8})/i);
+        const incNome = solicitanteMatch ? solicitanteMatch[1].trim() : '';
+        const incMatricula = solicitanteMatch ? solicitanteMatch[2].trim() : '';
+
+        let incSistema = 'GSE (COELBA) - PRD';
+        if (/GSE\s*\(COSERN\)/i.test(block)) incSistema = 'GSE (COSERN) - PRD';
+        else if (/GSE\s*\(PERNAMBUCO\)/i.test(block)) incSistema = 'GSE (PERNAMBUCO) - PRD';
+        else if (/UE\s*WEB/i.test(block)) incSistema = 'UE WEB (CS) - PRD';
+        else if (/GSE\s*\(COELBA\)/i.test(block)) incSistema = 'GSE (COELBA) - PRD';
+
+        let acaoInferida = 'reset';
+        if (/Desbloqueio/i.test(block)) acaoInferida = 'unlock';
+
+        const isPriority = /GSE|UE\s*WEB/i.test(block);
+
+        fila.push({
+            id: crypto.randomUUID(),
+            registro: incRegistro,
+            nome: incNome,
+            matricula: incMatricula,
+            dataExibicao: incCriadoEm,
+            sistema: incSistema,
+            acao: acaoInferida,
+            senha: '',
+            isPriority: isPriority,
+            concluido: false
+        });
+    });
+
+    return { success: true, fila };
+}
