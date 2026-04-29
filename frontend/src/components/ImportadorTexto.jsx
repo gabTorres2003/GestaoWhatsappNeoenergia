@@ -1,4 +1,3 @@
-// src/components/ImportadorTexto.jsx
 import React, { useState } from 'react';
 import { parseWhatsAppText } from '../services/parser';
 import { classifyChamado } from '../services/classifier';
@@ -6,8 +5,6 @@ import { classifyChamado } from '../services/classifier';
 const ImportadorTexto = ({ onImported }) => {
   const [text, setText] = useState('');
   const [solicitante, setSolicitante] = useState('');
-
-  // NOVO: Função que garante o @ no início
   const handleSolicitanteChange = (e) => {
     let val = e.target.value;
     if (val.length > 0 && !val.startsWith('@')) {
@@ -25,7 +22,7 @@ const ImportadorTexto = ({ onImported }) => {
       return {
         ...item,
         ...classification,
-        solicitante: solicitante.trim(), // Já vai ser salvo com o @ garantido
+        solicitante: solicitante.trim(), 
         status: 'ABERTO',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -34,7 +31,7 @@ const ImportadorTexto = ({ onImported }) => {
 
     onImported(enrichedData);
     setText('');
-    setSolicitante(''); // Limpa o campo após importar
+    setSolicitante('');
   };
 
   return (
