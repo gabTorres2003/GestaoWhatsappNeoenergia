@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getWhatsAppTemplates } from '../services/templates';
 
-const ScriptGenerator = ({ chamadosSelecionados = [] }) => {
+const ScriptGenerator = ({ chamadosSelecionados = [], onMassiveUpdate }) => {
   const [primeiroChamado, setPrimeiroChamado] = useState({});
   const [copiedId, setCopiedId] = useState(null);
 
@@ -44,7 +44,23 @@ const ScriptGenerator = ({ chamadosSelecionados = [] }) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="space-y-4 mb-6">
+        {/* Campo individual para o Nome do Cliente */}
+        <div>
+          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-wider block mb-1">
+            Nome do Cliente (no Script)
+          </label>
+          <input 
+            type="text" 
+            value={primeiroChamado.cliente_nome || ''} 
+            onChange={(e) => onMassiveUpdate({ cliente_nome: e.target.value })}
+            placeholder="Ex: Joyce" 
+            className="w-full bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 focus:border-neo-green outline-none transition-all text-sm" 
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 pt-4 border-t border-slate-700/50">
         {templates.map((t) => (
           <button
             key={t.id}
@@ -60,7 +76,7 @@ const ScriptGenerator = ({ chamadosSelecionados = [] }) => {
               <span>{copiedId === t.id ? 'COPIADO COM SUCESSO!' : t.label}</span>
             </div>
             {copiedId !== t.id && (
-              <span className="text-[9px] opacity-70 font-normal lowercase tracking-tight">
+              <span className="text-[9px] opacity-70 font-normal lowercase tracking-tight text-left">
                 Clique para copiar o texto pronto
               </span>
             )}
@@ -68,8 +84,9 @@ const ScriptGenerator = ({ chamadosSelecionados = [] }) => {
         ))}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-700/50 text-[10px] text-slate-500 italic leading-relaxed">
-        * Os scripts utilizam os dados do INC selecionado na tabela. Caso o script peça "Mesa", preencha manualmente após colar.
+      <div className="mt-6 pt-4 border-t border-slate-700/50 text-[10px] text-slate-500 italic leading-relaxed text-center">
+        * Os scripts utilizam os dados do INC selecionado na tabela. 
+        A "Mesa" e o "Cliente" são preenchidos automaticamente conforme os dados da linha.
       </div>
     </div>
   );

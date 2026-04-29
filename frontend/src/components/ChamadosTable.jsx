@@ -29,7 +29,7 @@ const ChamadosTable = ({
   const copyColumnData = async (columnKey, columnName) => {
     if (chamadosExibidos.length === 0) return;
     const dataToCopy = chamadosExibidos.map(c => {
-      if (columnKey === 'equipe') return c.equipe_final;
+      if (columnKey === 'equipe' || columnKey === 'equipe_final') return c.equipe_final;
       return c[columnKey];
     }).join('\n');
 
@@ -47,7 +47,7 @@ const ChamadosTable = ({
   const allSelected = chamadosExibidos.length > 0 && chamadosExibidos.every(c => (selectedIds || []).includes(c.id));
 
   const HeaderCell = ({ label, columnKey }) => (
-    <th className="px-6 py-4 font-bold uppercase tracking-wider">
+    <th className="px-6 py-4 font-bold uppercase tracking-wider text-[11px] text-slate-400">
       <div className="flex items-center gap-2">
         {label}
         {columnKey && (
@@ -88,15 +88,30 @@ const ChamadosTable = ({
             <option value="RESOLVIDO">Resolvido</option>
             <option value="CANCELADO">Cancelado</option>
           </select>
+          <select 
+            onChange={(e) => {
+              if(e.target.value) {
+                onMassiveUpdate({ equipe_final: e.target.value });
+                e.target.value = "";
+              }
+            }}
+            className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green cursor-pointer"
+          >
+            <option value="">Alterar Mesa (Equipe)...</option>
+            <option value="N3 - Telecom">N3 - Telecom</option>
+            <option value="N2 - Field Service">N2 - Field Service</option>
+            <option value="Mesa - Aplicações">Mesa - Aplicações</option>
+            <option value="Sistemas Corporativos">Sistemas Corporativos</option>
+            <option value="Infraestrutura">Infraestrutura</option>
+          </select>
 
+          {/* NOVO: Alteração massiva de Nome do Cliente */}
           <input 
             type="text"
-            placeholder="Mudar Solicitante..."
+            placeholder="Mudar Nome Cliente..."
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.target.value.trim() !== '') {
-                let val = e.target.value.trim();
-                if (!val.startsWith('@')) val = '@' + val;
-                onMassiveUpdate({ solicitante: val });
+                onMassiveUpdate({ cliente_nome: e.target.value.trim() });
                 e.target.value = '';
               }
             }}
@@ -134,10 +149,9 @@ const ChamadosTable = ({
                 />
               </th>
               <HeaderCell label="INC" columnKey="inc" />
-              {/* Coluna SLA Removida daqui */}
               <HeaderCell label="Solicitante" columnKey="solicitante" />
               <HeaderCell label="Categoria" columnKey="categoria" />
-              <HeaderCell label="Responsável" columnKey="equipe" />
+              <HeaderCell label="Mesa" columnKey="equipe_final" />
               <HeaderCell label="Status" columnKey="status" />
               <th className="px-6 py-4 font-bold uppercase tracking-wider">Ações</th>
             </tr>
@@ -156,7 +170,7 @@ const ChamadosTable = ({
                 <td className="px-6 py-4 font-mono text-slate-200">{chamado.inc}</td>
                 <td className="px-6 py-4 text-slate-300 font-semibold">{chamado.solicitante || '-'}</td>
                 <td className="px-6 py-4 text-slate-300">{chamado.categoria}</td>
-                <td className="px-6 py-4 text-slate-300">{chamado.equipe_final}</td>
+                <td className="px-6 py-4 text-slate-300">{chamado.equipe_final || '-'}</td>
                 <td className="px-6 py-4">
                   <select
                     value={chamado.status}
