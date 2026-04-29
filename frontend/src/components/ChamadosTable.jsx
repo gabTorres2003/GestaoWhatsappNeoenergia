@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import SLAIndicator from './SLAIndicator';
 
 const ChamadosTable = ({ 
   chamados = [], 
@@ -11,7 +10,6 @@ const ChamadosTable = ({
   onMassiveUpdate = () => {} 
 }) => {
   const [copiedCol, setCopiedCol] = useState(null);
-  const [ordemSla, setOrdemSla] = useState('asc'); 
   const [filtroSolicitante, setFiltroSolicitante] = useState('');
 
   const solicitantesUnicos = useMemo(() => {
@@ -20,29 +18,13 @@ const ChamadosTable = ({
     return [...new Set(nomes)].sort(); 
   }, [chamados]);
 
-  const obterTempoSla = (chamado) => {
-    if (chamado.horario) {
-      try {
-        const [horas, minutos] = chamado.horario.split(':').map(Number);
-        const dataReferencia = new Date();
-        dataReferencia.setHours(horas, minutos, 0, 0);
-        return dataReferencia.getTime();
-      } catch (e) {}
-    }
-    return new Date(chamado.created_at).getTime();
-  };
-
   const chamadosExibidos = useMemo(() => {
     let filtrados = chamados || [];
     if (filtroSolicitante) {
       filtrados = filtrados.filter(c => c.solicitante === filtroSolicitante);
     }
-    return filtrados.sort((a, b) => {
-      const tempoA = obterTempoSla(a);
-      const tempoB = obterTempoSla(b);
-      return ordemSla === 'asc' ? tempoA - tempoB : tempoB - tempoA; 
-    });
-  }, [chamados, filtroSolicitante, ordemSla]);
+    return filtrados;
+  }, [chamados, filtroSolicitante]);
 
   const copyColumnData = async (columnKey, columnName) => {
     if (chamadosExibidos.length === 0) return;
@@ -57,8 +39,6 @@ const ChamadosTable = ({
       setTimeout(() => setCopiedCol(null), 2000);
     } catch (err) {}
   };
-
-  const alternarOrdemSla = () => setOrdemSla(ordemSla === 'asc' ? 'desc' : 'asc');
 
   const handleSelectAllFiltered = (e) => {
     onSelectAll(chamadosExibidos.map(c => c.id), e.target.checked);
@@ -122,7 +102,6 @@ const ChamadosTable = ({
             }}
             className="bg-slate-900 text-white text-xs p-2 rounded border border-slate-700 outline-none focus:border-neo-green w-48"
           />
-          <span className="text-slate-500 text-[10px] italic">Pressione Enter para aplicar o nome</span>
         </div>
       )}
 
@@ -155,18 +134,7 @@ const ChamadosTable = ({
                 />
               </th>
               <HeaderCell label="INC" columnKey="inc" />
-              <th 
-                className="px-6 py-4 font-bold uppercase tracking-wider cursor-pointer hover:text-white transition-colors group"
-                onClick={alternarOrdemSla}
-                title="Clique para ordenar pelo SLA"
-              >
-                <div className="flex items-center gap-2">
-                  SLA
-                  <span className="text-slate-500 group-hover:text-neo-green transition-colors text-lg leading-none">
-                    {ordemSla === 'asc' ? '↓' : '↑'}
-                  </span>
-                </div>
-              </th>
+              {/* Coluna SLA Removida daqui */}
               <HeaderCell label="Solicitante" columnKey="solicitante" />
               <HeaderCell label="Categoria" columnKey="categoria" />
               <HeaderCell label="Responsável" columnKey="equipe" />
@@ -186,9 +154,6 @@ const ChamadosTable = ({
                   />
                 </td>
                 <td className="px-6 py-4 font-mono text-slate-200">{chamado.inc}</td>
-                <td className="px-6 py-4">
-                  <SLAIndicator createdAt={chamado.created_at} status={chamado.status} />
-                </td>
                 <td className="px-6 py-4 text-slate-300 font-semibold">{chamado.solicitante || '-'}</td>
                 <td className="px-6 py-4 text-slate-300">{chamado.categoria}</td>
                 <td className="px-6 py-4 text-slate-300">{chamado.equipe_final}</td>
