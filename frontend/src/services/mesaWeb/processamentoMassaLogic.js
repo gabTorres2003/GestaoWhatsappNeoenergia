@@ -31,16 +31,18 @@ export function processarTabelaServiceNow(rawData) {
         const incNome = solicitanteMatch ? solicitanteMatch[1].trim() : '';
         const incMatricula = solicitanteMatch ? solicitanteMatch[2].trim() : '';
 
-        let incSistema = 'GSE (COELBA) - PRD';
+        let incSistema = 'NÃO IDENTIFICADO';
+
         if (/GSE\s*\(COSERN\)/i.test(block)) incSistema = 'GSE (COSERN) - PRD';
         else if (/GSE\s*\(PERNAMBUCO\)/i.test(block)) incSistema = 'GSE (PERNAMBUCO) - PRD';
-        else if (/UE\s*WEB/i.test(block)) incSistema = 'UE WEB (CS) - PRD';
         else if (/GSE\s*\(COELBA\)/i.test(block)) incSistema = 'GSE (COELBA) - PRD';
+        else if (/UE\s*WEB/i.test(block)) incSistema = 'UE WEB (CS) - PRD';
+        else if (/MFA/i.test(block)) incSistema = 'MFA (Autenticador)'; 
 
         let acaoInferida = 'reset';
         if (/Desbloqueio/i.test(block)) acaoInferida = 'unlock';
 
-        const isPriority = /GSE|UE\s*WEB/i.test(block);
+        const isPriority = /GSE|UE\s*WEB|MFA/i.test(block);
 
         fila.push({
             id: crypto.randomUUID(),
