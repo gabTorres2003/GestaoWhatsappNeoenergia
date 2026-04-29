@@ -1,39 +1,53 @@
-/**
- * Gerador de scripts dinâmicos para atendimento
- */
+export const getWhatsAppTemplates = (chamado) => {
+  const saudacao = () => {
+    const hora = new Date().getHours();
+    if (hora < 12) return "Bom dia";
+    if (hora < 18) return "Boa tarde";
+    return "Boa noite";
+  };
 
-const TEMPLATES = {
-  PRIMEIRO_CONTATO: (incs, nome = 'Equipe') => `Bom dia, @${nome}!
-  
-Solicitada a prioridade e previsão de atendimento para os chamados abaixo:
+  const inc = chamado.inc || "INCXXXXX";
+  const solicitante = chamado.solicitante || "[NOME DO CLIENTE]";
+  const local = chamado.localizacao || "xxxx";
+  const data = chamado.data || "xx/xx";
+  const horaChamado = chamado.horario || "xx:xx";
+  const descricao = chamado.descricao || "[DESCRIÇÃO]";
 
-(${incs.join(', ')})
-
-Voltamos em 15 minutos com mais informações!`,
-
-  SOLICITACAO_PREVISAO: (incs) => `Olá, bom dia!
-  
-Poderia nos informar a previsão de atendimento para o(s) chamado(s) abaixo?
-
-(${incs.join(', ')})`,
-
-  NORMALIZADO: (incs) => `Prezados, 
-  
-Informamos que a falha reportada nos chamados abaixo foi normalizada.
-
-(${incs.join(', ')})
-
-Favor validar o acesso.`,
-
-  FINALIZADO: (incs) => `Bom dia!
-  
-Chamados finalizados e validados com o usuário.
-
-(${incs.join(', ')})`
-};
-
-export const generateScript = (tipo, incs, nome) => {
-  const template = TEMPLATES[tipo];
-  if (!template) return 'Template não encontrado';
-  return template(incs, nome);
+  return [
+    {
+      id: 'alto_impacto',
+      label: 'Grupo Alto Impacto',
+      color: 'bg-red-600',
+      icon: '🚨',
+      script: `URGENTE - GRUPO ALTO IMPACTO\nCHAMADO TIPO:\nLOJA: ${local}\nDATA: ${data}\nHORA: ${horaChamado}\nCHAMADO: ${inc}\nDescrição do chamado: ${descricao}\nCANAL DE ABERTURA: Itnow (site)`
+    },
+    {
+      id: 'comunicado_equipe',
+      label: 'Aviso de Verificação',
+      color: 'bg-amber-500',
+      icon: '📣',
+      script: `${saudacao()}!\n\nComunicamos que o chamado encontra-se com a equipe responsável para a verificação.\n\nSolicitamos prioridade no atendimento e a previsão de normalização.\n\nAcompanhe seu incidente através do portal:\nhttps://iberdrola.service-now.com/itnow via aba Consultas, localizar o incidente desejado, para acompanhamento e inclusão de informações/evidências.\nou através da nossa URA: (71) 3370-6000.\n\nCordialmente,\nService Desk Neoenergia.`
+    },
+    {
+      id: 'solicitacao_previsao',
+      label: 'Solicitar Previsão (Time)',
+      color: 'bg-blue-600',
+      icon: '⏳',
+      script: `Time (INSERIR A MESA QUE ESTÁ O ATENDIMENTO NO MOMENTO),\n\nPor gentileza, fornecer uma previsão de normalização, para que possamos informar o(a) colaborador(a) solicitante, e priorizar o atendimento.\n\nCordialmente,\nService Desk Neoenergia.`
+    },
+    {
+      id: 'feedback_cliente',
+      label: 'Feedback Cliente',
+      color: 'bg-emerald-500',
+      icon: '👤',
+      script: `Olá ${solicitante},\n\nÉ um prazer poder te ajudar, por isso documentamos todas as informações fornecidas. Destacamos a prioridade e solicitamos um retorno da equipe responsável, para fornecer uma previsão de atendimento para a solução do seu caso.\n\nPara acompanhar o andamento com o status atualizado, basta localizar o identificador n.º ${inc} no ITNow (https://iberdrola.service-now.com/itnow), diretamente pela aba CONSULTAS. Além disso, caso seja necessário, você pode adicionar mais informações relevantes e novas evidências sobre o erro.\n\nEm caso de dúvidas, estamos à disposição. Sinta-se à vontade para entrar em contato pelos Canais de Atendimento listados abaixo:\n\nChat via ITNOW: https://iberdrola.service-now.com/itnow\nTelefone Externo: 7133706000\n\nCordialmente,\nService Desk Neoenergia.`
+    },
+    {
+      id: 'reabertura_falha',
+      label: 'Falha Recorrente',
+      color: 'bg-rose-700',
+      icon: '🔄',
+      script: `Time (INSERIR A MESA QUE ESTÁ O ATENDIMENTO NO MOMENTO),\n\nColaborador(a) informou que a falha voltou a ocorrer.\nPor gentileza, fornecer uma previsão de normalização, para que possamos informar o(a) colaborador(a) solicitante.\n\nCordialmente,\nService Desk Neoenergia.`
+    }
+  ];
 };
