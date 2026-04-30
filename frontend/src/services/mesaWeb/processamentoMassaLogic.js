@@ -28,8 +28,19 @@ export function processarTabelaServiceNow(rawData) {
         }
 
         const solicitanteMatch = block.match(/([A-ZÀ-Ÿa-z\s]+?)\s*-\s*([A-Z0-9]{6,8})/i);
-        const incNome = solicitanteMatch ? solicitanteMatch[1].trim() : '';
-        const incMatricula = solicitanteMatch ? solicitanteMatch[2].trim() : '';
+        let incNome = '';
+        let incMatricula = '(PENDENTE)';
+        const primeiraLinha = block.split('\n')[0];
+        const restoLinha = primeiraLinha.replace(/INC\d+\s+/, '').trim();
+        const colunaSolicitante = restoLinha.split(/\t| {2,}/)[0] || '';
+        const matchMatricula = colunaSolicitante.match(/(.+?)\s*-\s*([A-Z0-9]{6,8})$/i);
+        
+        if (matchMatricula) {
+            incNome = matchMatricula[1].trim();
+            incMatricula = matchMatricula[2].trim();
+        } else {
+            incNome = colunaSolicitante.trim();
+        }
 
         let incSistema = 'NÃO IDENTIFICADO';
 
