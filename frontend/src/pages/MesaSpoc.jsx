@@ -7,7 +7,7 @@ import logoMinsait from '../assets/logo_minsait.png';
 
 // Subcomponente: Painel de Ações Expansível (Isola os inputs de cada chamado)
 const SpocActionPanel = ({ chamado }) => {
-    const [telefone, setTelefone] = useState('');
+    const [telefone, setTelefone] = useState(chamado.telefone || '');
     const [tentativa, setTentativa] = useState('1');
     const [nota, setNota] = useState('');
     const [primario, setPrimario] = useState(chamado.identificador);

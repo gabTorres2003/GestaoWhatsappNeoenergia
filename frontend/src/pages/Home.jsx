@@ -108,6 +108,24 @@ export default function Home() {
             </div>
           </Link>
 
+          {/* Card 5: Mesa SPOC (NOVO) */}
+          <Link 
+            to="/mesa-spoc" 
+            className="group relative md:col-span-2 bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-8 rounded-2xl hover:bg-slate-800 hover:border-indigo-500/50 transition-all duration-300 shadow-lg hover:shadow-indigo-500/10 flex flex-col items-center text-center gap-4"
+          >
+            <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center border border-slate-700 group-hover:scale-110 transition-transform duration-300">
+              <span className="text-3xl">🎯</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors">
+                Monitoria SPOC
+              </h2>
+              <p className="text-slate-400 text-sm max-w-xl mx-auto">
+                Acompanhe incidentes abertos nas Lojas de Atendimento, realize cobranças em chamados filhos (Referência Externa) e aplique templates automáticos na comunicação.
+              </p>
+            </div>
+          </Link>
+
         </main>
 
         {/* Rodapé */}
